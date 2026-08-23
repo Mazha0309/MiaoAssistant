@@ -1,0 +1,14 @@
+# Gradle / 构建产物
+.gradle/
+build/
+
+# 本机环境（含 SDK 路径，不提交）
+local.properties
+
+# IDE
+.idea/
+*.iml
+captures/
+
+# 系统
+.DS_Store
