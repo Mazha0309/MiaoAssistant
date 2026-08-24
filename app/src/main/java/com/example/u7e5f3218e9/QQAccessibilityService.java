@@ -21,7 +21,7 @@ public class QQAccessibilityService extends AccessibilityService {
     private boolean processing = false;
     private long lastWriteTime = 0;
 
-    @Override // android.accessibilityservice.AccessibilityService
+    @Override
     public void onAccessibilityEvent(AccessibilityEvent e) {
         String pkg = e.getPackageName() != null ? e.getPackageName().toString() : "";
         if (PKG_QQ.equals(pkg) || PKG_QQI.equals(pkg)) {
@@ -191,7 +191,6 @@ public class QQAccessibilityService extends AccessibilityService {
         this.processing = false;
     }
 
-    /** 复制一份配置，但关闭颜文字（实时输入时避免每次键入都追加颜文字） */
     private CatConfig cloneConfigWithoutEmoticon(CatConfig src) {
         CatConfig c = new CatConfig();
         c.enableAppend = src.enableAppend;
@@ -203,7 +202,6 @@ public class QQAccessibilityService extends AccessibilityService {
         return c;
     }
 
-    /** 剥离文本中的颜文字与连续符号，还原为"用户原始输入" */
     private String stripAll(String text, CatConfig cfg) {
         if (text == null || text.isEmpty()) {
             return "";
@@ -214,7 +212,7 @@ public class QQAccessibilityService extends AccessibilityService {
             emotes = CatConfig.BUILTIN_EMOTICONS;
         }
         Arrays.sort(emotes, new Comparator() {
-            @Override // java.util.Comparator
+            @Override
             public int compare(Object obj, Object obj2) {
                 return QQAccessibilityService.lambda$stripAll$0((String) obj, (String) obj2);
             }
@@ -229,7 +227,7 @@ public class QQAccessibilityService extends AccessibilityService {
                 if (idx <= 0 || result.charAt(idx - 1) != ' ') {
                     st = idx;
                 } else {
-                    st = idx - 1; // 颜文字前紧邻的空格一并移除
+                    st = idx - 1;
                 }
                 result = result.substring(0, st) + result.substring(idx + em.length());
             }
@@ -237,7 +235,7 @@ public class QQAccessibilityService extends AccessibilityService {
         return result.replaceAll("\\s*[\\p{S}\\p{So}\\p{Sm}\\p{Sk}\\p{P}]{3,}\\s*", " ").trim();
     }
 
-    static /* synthetic */ int lambda$stripAll$0(String a, String b) {
+    static  int lambda$stripAll$0(String a, String b) {
         return b.length() - a.length();
     }
 
@@ -301,12 +299,12 @@ public class QQAccessibilityService extends AccessibilityService {
         }
     }
 
-    @Override // android.accessibilityservice.AccessibilityService
+    @Override
     public void onInterrupt() {
         this.processing = false;
     }
 
-    @Override // android.accessibilityservice.AccessibilityService
+    @Override
     public void onServiceConnected() {
         super.onServiceConnected();
         AccessibilityServiceInfo i = new AccessibilityServiceInfo();

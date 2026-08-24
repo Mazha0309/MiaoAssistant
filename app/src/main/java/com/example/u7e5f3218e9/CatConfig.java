@@ -18,7 +18,6 @@ public class CatConfig {
     public static final String MODE_REALTIME = "realtime";
     private static final String PREFS_NAME = "cat_config";
 
-    /** 一条文本替换规则：把 from 出现的所有位置替换为 to */
     public static class Rule {
         public final String from;
         public final String to;
@@ -34,14 +33,13 @@ public class CatConfig {
         }
     }
 
-    public boolean enableAppend = true;          // 断句追加开关
-    public String appendText = "喵";              // 断句追加的文本
-    public boolean enableRandomEmoticon = true;  // 句末随机颜文字开关
+    public boolean enableAppend = true;
+    public String appendText = "喵";
+    public boolean enableRandomEmoticon = true;
     public String processingMode = MODE_PUNCTUATION;
     public String[] customEmoticons = new String[0];
-    public List<Rule> rules = new ArrayList<>(); // 自定义替换规则（有序，按顺序应用）
+    public List<Rule> rules = new ArrayList<>();
 
-    /** 解析一行规则："原词=替换词" 或 "原词→替换词"，非法返回 null */
     public static Rule parseRule(String line) {
         if (line == null) {
             return null;
@@ -50,13 +48,13 @@ public class CatConfig {
         if (s.isEmpty()) {
             return null;
         }
-        int eq = s.indexOf('=');
-        int arrow = s.indexOf('→');
-        int idx;
-        if (eq >= 0 && arrow >= 0) {
-            idx = Math.min(eq, arrow);
-        } else {
-            idx = Math.max(eq, arrow);
+        String separators = "=＝→";
+        int idx = -1;
+        for (int i = 0; i < separators.length(); i++) {
+            int p = s.indexOf(separators.charAt(i));
+            if (p >= 0 && (idx < 0 || p < idx)) {
+                idx = p;
+            }
         }
         if (idx <= 0) {
             return null;
@@ -69,7 +67,6 @@ public class CatConfig {
         return new Rule(from, to);
     }
 
-    /** 把规则列表序列化为换行文本（供编辑框展示） */
     public static String rulesToString(List<Rule> rules) {
         StringBuilder sb = new StringBuilder();
         if (rules != null) {

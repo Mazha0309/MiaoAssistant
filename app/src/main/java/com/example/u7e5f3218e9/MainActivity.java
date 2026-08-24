@@ -34,7 +34,7 @@ public class MainActivity extends Activity {
     private TextView statusText;
     private Button toggleButton;
 
-    @Override // android.app.Activity
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         try {
@@ -50,7 +50,6 @@ public class MainActivity extends Activity {
         root.setBackgroundColor(Color.parseColor("#FFF8E1"));
         root.setLayoutParams(new ViewGroup.LayoutParams(-1, -2));
 
-        // 标题
         TextView title = new TextView(this);
         title.setText("QQ文本改写助手");
         title.setTextSize(24.0f);
@@ -67,7 +66,6 @@ public class MainActivity extends Activity {
         subtitle.setPadding(0, 0, 0, 24);
         root.addView(subtitle);
 
-        // 服务状态
         this.statusText = new TextView(this);
         this.statusText.setTextSize(16.0f);
         this.statusText.setGravity(17);
@@ -83,7 +81,7 @@ public class MainActivity extends Activity {
         btnLp.setMargins(0, 16, 0, 0);
         this.toggleButton.setLayoutParams(btnLp);
         this.toggleButton.setOnClickListener(new View.OnClickListener() {
-            @Override // android.view.View.OnClickListener
+            @Override
             public void onClick(View v) {
                 MainActivity.this.openAccessibilitySettings();
             }
@@ -91,7 +89,6 @@ public class MainActivity extends Activity {
         root.addView(this.toggleButton);
         root.addView(divider());
 
-        // 处理模式
         TextView modeTitle = new TextView(this);
         modeTitle.setText("处理模式");
         modeTitle.setTextSize(18.0f);
@@ -108,7 +105,7 @@ public class MainActivity extends Activity {
         this.rbPunctuation.setTextColor(Color.rgb(51, 51, 51));
         this.rbPunctuation.setChecked(CatConfig.MODE_PUNCTUATION.equals(this.config.processingMode));
         this.rbPunctuation.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override // android.widget.CompoundButton.OnCheckedChangeListener
+            @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 MainActivity.this.m0lambda$onCreate$0$comexampleu7e5f3218e9MainActivity(buttonView, isChecked);
             }
@@ -120,7 +117,7 @@ public class MainActivity extends Activity {
         this.rbRealtime.setTextColor(Color.rgb(51, 51, 51));
         this.rbRealtime.setChecked(CatConfig.MODE_REALTIME.equals(this.config.processingMode));
         this.rbRealtime.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override // android.widget.CompoundButton.OnCheckedChangeListener
+            @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 MainActivity.this.m1lambda$onCreate$1$comexampleu7e5f3218e9MainActivity(buttonView, isChecked);
             }
@@ -134,7 +131,6 @@ public class MainActivity extends Activity {
         modeHint.setPadding(0, 0, 0, 16);
         root.addView(modeHint);
 
-        // 功能开关
         TextView funcTitle = new TextView(this);
         funcTitle.setText("功能开关");
         funcTitle.setTextSize(18.0f);
@@ -155,7 +151,6 @@ public class MainActivity extends Activity {
         root.addView(this.etAppendText);
         this.cbEmoticon = addCheckbox(root, "句末颜文字", "在消息末尾附加随机颜文字", this.config.enableRandomEmoticon);
 
-        // 文本替换规则（全部自定义）
         TextView ruleTitle = new TextView(this);
         ruleTitle.setText("文本替换规则");
         ruleTitle.setTextSize(18.0f);
@@ -164,7 +159,7 @@ public class MainActivity extends Activity {
         ruleTitle.setPadding(0, 16, 0, 8);
         root.addView(ruleTitle);
         TextView ruleHint = new TextView(this);
-        ruleHint.setText("每行一条，按顺序应用。格式：原词=替换词（也支持 →）\n例：我=本喵 / 你=主人 / 也支持数字等任意文本");
+        ruleHint.setText("每行一条，按顺序应用。格式：原词=替换词（也支持 ＝ 全角等号 / →）\n例：我=本喵 / 你＝主人 / 也支持数字等任意文本");
         ruleHint.setTextSize(12.0f);
         ruleHint.setTextColor(Color.rgb(141, 110, 99));
         ruleHint.setPadding(0, 0, 0, 12);
@@ -178,7 +173,6 @@ public class MainActivity extends Activity {
         this.etRules.setText(CatConfig.rulesToString(this.config.rules));
         root.addView(this.etRules);
 
-        // 自定义颜文字
         TextView emojiTitle = new TextView(this);
         emojiTitle.setText("自定义颜文字");
         emojiTitle.setTextSize(18.0f);
@@ -202,7 +196,6 @@ public class MainActivity extends Activity {
         this.etCustomEmoticons.setText(joinLines(this.config.customEmoticons));
         root.addView(this.etCustomEmoticons);
 
-        // 保存 + 测试
         Button saveBtn = new Button(this);
         saveBtn.setText("保存设置");
         saveBtn.setTextSize(16.0f);
@@ -213,7 +206,7 @@ public class MainActivity extends Activity {
         saveLp.setMargins(0, 16, 0, 0);
         saveBtn.setLayoutParams(saveLp);
         saveBtn.setOnClickListener(new View.OnClickListener() {
-            @Override // android.view.View.OnClickListener
+            @Override
             public void onClick(View v) {
                 MainActivity.this.saveConfig();
             }
@@ -229,7 +222,7 @@ public class MainActivity extends Activity {
         testLp.setMargins(0, 12, 0, 0);
         testBtn.setLayoutParams(testLp);
         testBtn.setOnClickListener(new View.OnClickListener() {
-            @Override // android.view.View.OnClickListener
+            @Override
             public void onClick(View v) {
                 MainActivity.this.showTestDialog();
             }
@@ -259,7 +252,7 @@ public class MainActivity extends Activity {
         }
     }
 
-    @Override // android.app.Activity
+    @Override
     protected void onResume() {
         super.onResume();
         updateServiceStatus();
@@ -376,7 +369,7 @@ public class MainActivity extends Activity {
             this.config.appendText = append.isEmpty() ? "喵" : append;
             this.config.enableRandomEmoticon = this.cbEmoticon.isChecked();
             this.config.processingMode = this.rbRealtime.isChecked() ? CatConfig.MODE_REALTIME : CatConfig.MODE_PUNCTUATION;
-            // 解析替换规则
+
             ArrayList<CatConfig.Rule> rules = new ArrayList<>();
             String rulesText = this.etRules.getText() == null ? "" : this.etRules.getText().toString();
             for (String line : rulesText.split("\n")) {
@@ -386,7 +379,7 @@ public class MainActivity extends Activity {
                 }
             }
             this.config.rules = rules;
-            // 解析自定义颜文字
+
             ArrayList<String> list = new ArrayList<>();
             String customText = this.etCustomEmoticons.getText() == null ? "" : this.etCustomEmoticons.getText().toString().trim();
             if (!customText.isEmpty()) {

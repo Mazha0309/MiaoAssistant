@@ -10,16 +10,12 @@ public class TextProcessor {
     private static final Random RANDOM = new Random();
     private static final Pattern SENTENCE_SPLIT_PATTERN = Pattern.compile("([，,。！!？?\\s]+)");
 
-    /**
-     * 通用文本改写：按配置顺序应用「自定义替换规则」→「断句追加」→「句末颜文字」。
-     */
     public static String process(String original, CatConfig config) {
         if (original == null || original.trim().isEmpty()) {
             return original;
         }
         String text = original.trim();
 
-        // 1. 按顺序应用自定义替换规则（后一条规则可作用于前一条的结果）
         if (config.rules != null) {
             for (CatConfig.Rule rule : config.rules) {
                 if (rule == null || rule.from.isEmpty()) {
@@ -29,12 +25,10 @@ public class TextProcessor {
             }
         }
 
-        // 2. 断句追加（原"断句加喵"，后缀可在界面自定义）
         if (config.enableAppend) {
             text = appendPerSentence(text, config.appendText);
         }
 
-        // 3. 句末随机颜文字
         if (config.enableRandomEmoticon) {
             String emoticon = getRandomEmoticon(config);
             if (emoticon != null && !emoticon.isEmpty()) {
@@ -44,7 +38,6 @@ public class TextProcessor {
         return text;
     }
 
-    /** 按标点分句，在每句末尾追加指定的 suffix */
     private static String appendPerSentence(String text, String suffix) {
         String s = (suffix == null) ? "" : suffix;
         List<String> parts = new ArrayList<>();
@@ -90,7 +83,6 @@ public class TextProcessor {
         return emoticons.length == 0 ? "" : emoticons[RANDOM.nextInt(emoticons.length)];
     }
 
-    /** 便捷入口：仅开启断句加"喵"与随机颜文字，无自定义替换规则 */
     public static String process(String original) {
         CatConfig defaults = new CatConfig();
         defaults.enableAppend = true;
