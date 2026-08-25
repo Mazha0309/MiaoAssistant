@@ -1,5 +1,6 @@
 package com.mazha0309.miaoassistant.ui
 
+import android.os.Build
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -10,6 +11,7 @@ import androidx.compose.material.icons.rounded.BatteryFull
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.NotificationsActive
+import androidx.compose.material.icons.rounded.Terminal
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -18,9 +20,11 @@ import androidx.compose.ui.unit.dp
 import com.mazha0309.miaoassistant.R
 import com.mazha0309.miaoassistant.config.AppConfig
 import com.mazha0309.miaoassistant.config.AppScopeMode
+import com.mazha0309.miaoassistant.config.InputWriteMode
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.preference.ArrowPreference
+import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import top.yukonga.miuix.kmp.preference.SwitchPreference
 
 @Composable
@@ -29,6 +33,7 @@ internal fun ScopePage(
     serviceEnabled: Boolean,
     batteryOptimizationIgnored: Boolean,
     bottomInnerPadding: Dp,
+    onInputWriteModeChange: (InputWriteMode) -> Unit,
     onKeepAliveChange: (Boolean) -> Unit,
     onOpenAccessibilitySettings: () -> Unit,
     onOpenBatterySettings: () -> Unit,
@@ -43,9 +48,21 @@ internal fun ScopePage(
             Card(modifier = Modifier.fillMaxWidth()) {
                 ArrowPreference(
                     title = stringResource(R.string.open_accessibility_settings),
-                    summary = stringResource(
-                        if (serviceEnabled) R.string.service_running else R.string.service_stopped,
-                    ),
+                    summary = when {
+                        serviceEnabled -> stringResource(R.string.service_running)
+                        config.inputWriteMode != InputWriteMode.ACCESSIBILITY -> stringResource(
+                            R.string.service_privileged_waiting_short,
+                            stringResource(
+                                if (config.inputWriteMode == InputWriteMode.SHIZUKU) {
+                                    R.string.input_write_shizuku
+                                } else {
+                                    R.string.input_write_root
+                                },
+                            ),
+                        )
+
+                        else -> stringResource(R.string.service_stopped)
+                    },
                     startAction = { PreferenceIcon(Icons.Rounded.AccessibilityNew) },
                     onClick = onOpenAccessibilitySettings,
                 )
@@ -71,6 +88,26 @@ internal fun ScopePage(
                     },
                     startAction = { PreferenceIcon(Icons.Rounded.Apps) },
                     onClick = onOpenAppScope,
+                )
+                OverlayDropdownPreference(
+                    items = listOf(
+                        stringResource(R.string.input_write_accessibility),
+                        stringResource(R.string.input_write_shizuku),
+                        stringResource(R.string.input_write_root),
+                    ),
+                    selectedIndex = InputWriteMode.entries.indexOf(config.inputWriteMode),
+                    title = stringResource(R.string.input_write_mode),
+                    summary = stringResource(
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            R.string.input_write_mode_modern_summary
+                        } else {
+                            R.string.input_write_mode_legacy_summary
+                        },
+                    ),
+                    startAction = { PreferenceIcon(Icons.Rounded.Terminal) },
+                    onSelectedIndexChange = { index ->
+                        onInputWriteModeChange(InputWriteMode.entries[index])
+                    },
                 )
                 BasicComponent(
                     title = stringResource(R.string.password_protection),

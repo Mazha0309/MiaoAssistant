@@ -31,6 +31,13 @@ class ConfigRepository(context: Context) {
 
             else -> emptySet()
         },
+        inputWriteMode = if (preferences.contains(KEY_INPUT_WRITE_MODE)) {
+            InputWriteMode.fromStored(preferences.getString(KEY_INPUT_WRITE_MODE, null))
+        } else if (preferences.getBoolean(KEY_PRIVILEGED_INPUT_FALLBACK, false)) {
+            InputWriteMode.SHIZUKU
+        } else {
+            InputWriteMode.ACCESSIBILITY
+        },
         keepAliveEnabled = preferences.getBoolean(KEY_KEEP_ALIVE, false),
         themeMode = ThemeMode.fromStored(preferences.getString(KEY_THEME_MODE, null)),
         useMonet = preferences.getBoolean(KEY_USE_MONET, false),
@@ -52,6 +59,8 @@ class ConfigRepository(context: Context) {
             putString(KEY_APP_SCOPE_MODE, config.appScopeMode.storedValue)
             putStringSet(KEY_SCOPED_PACKAGES, config.scopedPackages)
             remove(KEY_EXCLUDED_PACKAGES)
+            putString(KEY_INPUT_WRITE_MODE, config.inputWriteMode.storedValue)
+            remove(KEY_PRIVILEGED_INPUT_FALLBACK)
             putBoolean(KEY_KEEP_ALIVE, config.keepAliveEnabled)
             putString(KEY_THEME_MODE, config.themeMode.storedValue)
             putBoolean(KEY_USE_MONET, config.useMonet)
@@ -87,6 +96,9 @@ class ConfigRepository(context: Context) {
         private const val KEY_SCOPED_PACKAGES = "scoped_packages"
         // Kept only to migrate development builds that used a manual exclusion editor.
         private const val KEY_EXCLUDED_PACKAGES = "excluded_packages"
+        private const val KEY_INPUT_WRITE_MODE = "input_write_mode"
+        // Migrates the unreleased boolean fallback setting to the explicit mode selector.
+        private const val KEY_PRIVILEGED_INPUT_FALLBACK = "privileged_input_fallback"
         private const val KEY_KEEP_ALIVE = "keep_alive"
         private const val KEY_THEME_MODE = "theme_mode"
         private const val KEY_USE_MONET = "use_monet"

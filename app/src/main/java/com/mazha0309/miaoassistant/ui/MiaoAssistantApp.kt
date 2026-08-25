@@ -32,6 +32,7 @@ import androidx.compose.ui.res.stringResource
 import com.mazha0309.miaoassistant.R
 import com.mazha0309.miaoassistant.apps.InstalledApp
 import com.mazha0309.miaoassistant.config.AppConfig
+import com.mazha0309.miaoassistant.config.InputWriteMode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.Scaffold
@@ -48,6 +49,7 @@ fun MiaoAssistantApp(
     serviceEnabled: Boolean,
     batteryOptimizationIgnored: Boolean,
     onConfigChange: (AppConfig) -> Unit,
+    onInputWriteModeChange: (InputWriteMode) -> Unit,
     onKeepAliveChange: (Boolean) -> Unit,
     onOpenAccessibilitySettings: () -> Unit,
     onOpenBatterySettings: () -> Unit,
@@ -118,6 +120,7 @@ fun MiaoAssistantApp(
                 pagerState = pagerState,
                 scope = scope,
                 onConfigChange = onConfigChange,
+                onInputWriteModeChange = onInputWriteModeChange,
                 onKeepAliveChange = onKeepAliveChange,
                 onOpenAccessibilitySettings = onOpenAccessibilitySettings,
                 onOpenBatterySettings = onOpenBatterySettings,
@@ -138,6 +141,7 @@ private fun MainPager(
     pagerState: PagerState,
     scope: CoroutineScope,
     onConfigChange: (AppConfig) -> Unit,
+    onInputWriteModeChange: (InputWriteMode) -> Unit,
     onKeepAliveChange: (Boolean) -> Unit,
     onOpenAccessibilitySettings: () -> Unit,
     onOpenBatterySettings: () -> Unit,
@@ -212,6 +216,7 @@ private fun MainPager(
                         serviceEnabled = serviceEnabled,
                         batteryOptimizationIgnored = batteryOptimizationIgnored,
                         bottomInnerPadding = bottomInnerPadding,
+                        onInputWriteModeChange = onInputWriteModeChange,
                         onKeepAliveChange = onKeepAliveChange,
                         onOpenAccessibilitySettings = onOpenAccessibilitySettings,
                         onOpenBatterySettings = onOpenBatterySettings,

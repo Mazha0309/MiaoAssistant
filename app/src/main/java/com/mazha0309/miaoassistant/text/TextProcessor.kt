@@ -13,6 +13,53 @@ data class ProcessedText(
 object TextProcessor {
     private val punctuation = setOf('，', ',', '。', '.', '！', '!', '？', '?', '；', ';', '：', ':', '\n')
 
+    /**
+     * Moves the suffix appended by the previous real-time rewrite behind newly typed text.
+     * This is intentionally tied to the exact previous output, so a user-authored "喵" in
+     * arbitrary text is not treated as assistant-managed content.
+     */
+    fun normalizeTypingAfterManagedSuffix(
+        input: String,
+        previousAppliedText: String?,
+        config: AppConfig,
+        selectionStart: Int = input.length,
+        selectionEnd: Int = selectionStart,
+    ): ProcessedText {
+        val suffix = config.sentenceSuffix
+        val previous = previousAppliedText
+        if (
+            config.processingMode != ProcessingMode.REALTIME ||
+            !config.enableSentenceSuffix ||
+            suffix.isEmpty() ||
+            previous == null ||
+            !previous.endsWith(suffix) ||
+            input.length <= previous.length ||
+            !input.startsWith(previous) ||
+            selectionStart < previous.length ||
+            selectionEnd < previous.length
+        ) {
+            return ProcessedText(
+                text = input,
+                selectionStart = selectionStart.coerceIn(0, input.length),
+                selectionEnd = selectionEnd.coerceIn(0, input.length),
+            )
+        }
+
+        val removalStart = previous.length - suffix.length
+        val removalEnd = previous.length
+        fun mapSelection(index: Int): Int = when {
+            index <= removalStart -> index
+            index <= removalEnd -> removalStart
+            else -> index - suffix.length
+        }
+
+        return ProcessedText(
+            text = input.removeRange(removalStart, removalEnd),
+            selectionStart = mapSelection(selectionStart).coerceAtLeast(0),
+            selectionEnd = mapSelection(selectionEnd).coerceAtLeast(0),
+        )
+    }
+
     fun shouldProcess(input: String, config: AppConfig): Boolean {
         if (!config.enabled || input.isEmpty()) return false
         if (config.processingMode == ProcessingMode.REALTIME) return true
@@ -37,6 +84,14 @@ object TextProcessor {
             selectionEnd = selectionEnd.coerceIn(0, input.length),
         )
 
+        if (
+            config.processingMode == ProcessingMode.REALTIME &&
+            config.enableSentenceSuffix &&
+            config.sentenceSuffix.isNotEmpty()
+        ) {
+            mapped = stripManagedSuffixes(mapped, config.sentenceSuffix)
+        }
+
         if (config.enableRandomEmoticon) {
             mapped = stripManagedEmoticon(mapped, config.activeEmoticons)
         }
@@ -48,6 +103,15 @@ object TextProcessor {
         val completedSentence = hasTerminalPunctuation(mapped.text)
         if (completedSentence && config.enableSentenceSuffix && config.sentenceSuffix.isNotEmpty()) {
             mapped = appendSuffixAtPunctuation(mapped, config.sentenceSuffix)
+        }
+
+        if (
+            config.processingMode == ProcessingMode.REALTIME &&
+            config.enableSentenceSuffix &&
+            config.sentenceSuffix.isNotEmpty() &&
+            !hasTerminalPunctuation(mapped.text)
+        ) {
+            mapped = appendSuffixToTrailingSentence(mapped, config.sentenceSuffix)
         }
 
         if (completedSentence && config.enableRandomEmoticon) {
@@ -140,6 +204,86 @@ object TextProcessor {
 
         return MappedText(
             text = result.toString(),
+            selectionStart = mapSelection(mapped.selectionStart),
+            selectionEnd = mapSelection(mapped.selectionEnd),
+        )
+    }
+
+    private fun appendSuffixToTrailingSentence(mapped: MappedText, suffix: String): MappedText {
+        val source = mapped.text
+        val contentEnd = source.indexOfLast { it != ' ' && it != '\t' && it != '\r' } + 1
+        if (contentEnd <= 0) return mapped
+
+        val segmentStart = source
+            .substring(0, contentEnd)
+            .indexOfLast { it in punctuation }
+            .let { if (it < 0) 0 else it + 1 }
+        val meaningfulPart = source.substring(segmentStart, contentEnd)
+        if (meaningfulPart.isBlank() || meaningfulPart.endsWith(suffix)) return mapped
+
+        val result = source.substring(0, contentEnd) + suffix + source.substring(contentEnd)
+        fun mapSelection(index: Int): Int = if (index > contentEnd) index + suffix.length else index
+        return MappedText(
+            text = result,
+            selectionStart = mapSelection(mapped.selectionStart),
+            selectionEnd = mapSelection(mapped.selectionEnd),
+        )
+    }
+
+    private fun stripManagedSuffixes(mapped: MappedText, suffix: String): MappedText {
+        if (suffix.isEmpty() || mapped.text.isEmpty()) return mapped
+        val source = mapped.text
+        val removals = mutableListOf<Pair<Int, Int>>()
+        var segmentStart = 0
+        var index = 0
+
+        while (index <= source.length) {
+            val atEnd = index == source.length
+            if (!atEnd && source[index] !in punctuation) {
+                index += 1
+                continue
+            }
+
+            val contentEnd = source
+                .substring(segmentStart, index)
+                .indexOfLast { !it.isWhitespace() }
+                .let { if (it < 0) segmentStart else segmentStart + it + 1 }
+            if (
+                contentEnd - segmentStart >= suffix.length &&
+                source.regionMatches(contentEnd - suffix.length, suffix, 0, suffix.length)
+            ) {
+                removals += (contentEnd - suffix.length) to contentEnd
+            }
+
+            if (atEnd) break
+            while (index < source.length && source[index] in punctuation) index += 1
+            segmentStart = index
+        }
+
+        if (removals.isEmpty()) return mapped
+        val result = buildString(source.length - removals.sumOf { it.second - it.first }) {
+            var copiedUntil = 0
+            removals.forEach { (start, end) ->
+                append(source, copiedUntil, start)
+                copiedUntil = end
+            }
+            append(source, copiedUntil, source.length)
+        }
+
+        fun mapSelection(selection: Int): Int {
+            var removed = 0
+            removals.forEach { (start, end) ->
+                when {
+                    selection < start -> return selection - removed
+                    selection <= end -> return start - removed
+                    else -> removed += end - start
+                }
+            }
+            return selection - removed
+        }
+
+        return MappedText(
+            text = result,
             selectionStart = mapSelection(mapped.selectionStart),
             selectionEnd = mapSelection(mapped.selectionEnd),
         )

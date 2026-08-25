@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Apps
-import androidx.compose.material.icons.rounded.Search
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -109,13 +108,6 @@ internal fun AppScopePage(
                 onValueChange = { query = it },
                 modifier = Modifier.fillMaxWidth(),
                 label = stringResource(R.string.search_apps),
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Rounded.Search,
-                        contentDescription = null,
-                        modifier = Modifier.size(22.dp),
-                    )
-                },
                 singleLine = true,
             )
             Spacer(Modifier.height(12.dp))

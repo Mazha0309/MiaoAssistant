@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
-    android:accessibilityEventTypes="typeViewTextChanged|typeViewFocused|typeWindowStateChanged|typeWindowsChanged"
+    android:accessibilityEventTypes="typeViewTextChanged|typeViewTextSelectionChanged|typeViewFocused|typeWindowStateChanged|typeWindowsChanged"
     android:accessibilityFeedbackType="feedbackGeneric"
-    android:notificationTimeout="40"
-    android:accessibilityFlags="flagRetrieveInteractiveWindows|flagReportViewIds|flagIncludeNotImportantViews"
+    android:notificationTimeout="0"
+    android:accessibilityFlags="flagRetrieveInteractiveWindows|flagReportViewIds|flagIncludeNotImportantViews|flagInputMethodEditor"
     android:canRetrieveWindowContent="true"
     android:description="@string/accessibility_service_description"
     android:settingsActivity="com.mazha0309.miaoassistant.MainActivity" />

@@ -13,6 +13,7 @@
 - 默认提供可编辑、可删除的 `我=本喵` 与 `你=主人`，并支持更多多行自定义规则
 - 自定义断句追加内容、内置或自定义颜文字
 - 可搜索已安装应用，并选择“除所选应用外启用”或“仅在所选应用启用”
+- 应用内可直接选择无障碍、Shizuku 或 Root 文本写回方式
 - 本应用、系统界面和密码输入框始终跳过
 - MiuiX 分页界面，提供标准/悬浮底栏与 KernelSU 同源液态玻璃效果
 - 跟随系统、浅色与深色主题；莫奈取色可选且默认关闭
@@ -35,16 +36,17 @@
 
 液态玻璃依赖 Android 13（API 33）及以上的运行时着色器；低版本仍可使用标准底栏或不带折射效果的悬浮底栏。
 
-## 为什么没有加入 Shizuku / root
+## 无障碍、Shizuku 与 Root
 
-Shizuku 让应用以 ADB `shell` 或 root 身份调用部分系统 API，但不会把其他应用正在使用的 `InputConnection` 交给本应用。root 下的 `input text` 也只是注入按键，无法可靠获取候选区、光标、选区和原始文本，所以不能透明地替代无障碍服务。
+“范围与运行 → 文本写回方式”可以直接选择：
 
-若要完全不用无障碍，合理路线是：
+- **无障碍（默认）**：使用 `ACTION_SET_TEXT` 写回，改动最小，但微信等主动限制无障碍节点写入的应用可能无法使用。
+- **Shizuku**：选择时在应用内请求 Shizuku 授权，作为旧系统的兼容写回通道。
+- **Root**：选择时在应用内请求 KernelSU/Magisk 等 root 管理器授权，作为旧系统的兼容写回通道。
 
-1. 增加一个真正的输入法（IME），只处理用户通过该输入法输入的内容；或
-2. 另做 LSPosed/root Hook 模块，注入输入法或目标应用进程。它侵入性更高、兼容成本也更大，不适合伪装成普通 Shizuku 功能塞进主 APK。
+Shizuku/Root 只替换“写回”通道，仍需开启无障碍服务来识别当前输入事件、应用范围与密码框。Android 13 及以上通过系统提供给无障碍服务的 `InputConnection` 直接提交 Unicode 文本，不读写剪贴板；连接暂不可用时也不会暗中退回剪贴板。Android 12L 及以下没有这套接口，选择 Shizuku/Root 时才使用临时剪贴板兼容写回并在完成后恢复原内容。实时模式仍可能受具体输入法的候选区语义影响。
 
-因此当前主引擎仍是 Android 官方的 `AccessibilityService`，没有加入无实际收益的 Shizuku/root 依赖。
+三种方式严格按应用内选择执行，不会在未明确选择时自动升级到 Shizuku 或 Root。
 
 ## 保活说明
 
@@ -57,13 +59,14 @@ Shizuku 让应用以 ADB `shell` 或 root 身份调用部分系统 API，但不�
 1. 安装 APK，打开应用。
 2. 点击“管理无障碍服务”，启用“喵喵全局输入服务”。
 3. 配置触发方式、替换规则、追加内容与应用生效范围。
-4. 如设备后台策略较激进，可手动打开常驻通知保活，并在系统设置中调整电池优化。
+4. 若微信等应用拒绝无障碍写回，在“范围与运行”中切换为 Shizuku 或 Root 并完成授权。
+5. 如设备后台策略较激进，可手动打开常驻通知保活，并在系统设置中调整电池优化。
 
 建议先使用“标点触发”。实时模式会在每次文本变化时回写，对某些输入法的候选区或撤销逻辑更敏感。
 
 ## 构建
 
-环境：JDK 17+、Android SDK Platform 37。
+环境：JDK 17+、Android SDK Platform 37。应用最低支持 Android 7.0（API 24，与 Shizuku API 13 对齐）。
 
 ```bash
 ./gradlew testDebugUnitTest lintDebug assembleDebug
@@ -71,16 +74,18 @@ Shizuku 让应用以 ADB `shell` 或 root 身份调用部分系统 API，但不�
 
 调试 APK：`app/build/outputs/apk/debug/app-debug.apk`
 
-主要技术栈：Kotlin、Jetpack Compose、[MiuiX](https://github.com/compose-miuix-ui/miuix)、Gradle 9.7.1、AGP 9.3.1。MiuiX 版本与当前 KernelSU Manager 使用的 0.9.x 代际保持一致。
+主要技术栈：Kotlin、Jetpack Compose、[MiuiX](https://github.com/compose-miuix-ui/miuix)、[Shizuku API](https://github.com/RikkaApps/Shizuku-API)、Gradle 9.7.1、AGP 9.3.1。MiuiX 版本与当前 KernelSU Manager 使用的 0.9.x 代际保持一致。
 
 应用内“关于 → 第三方使用许可”与 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) 列出了界面及构建依赖的来源和许可证。
 
 ## 权限与隐私
 
 - `BIND_ACCESSIBILITY_SERVICE`：读取并回写当前聚焦的普通输入节点
+- Shizuku：仅在应用内选择 Shizuku 写回时请求授权
+- Root：仅在应用内选择 Root 写回时触发 root 管理器授权
 - `POST_NOTIFICATIONS`、前台服务权限：仅用于用户主动开启的可见保活
 - `RECEIVE_BOOT_COMPLETED`：仅在保活已经开启时尝试恢复
-- 无 `INTERNET`、悬浮窗、Shizuku 或 root 权限
+- 无 `INTERNET` 或悬浮窗权限；Shizuku/Root 均为默认不启用的可选写回方式
 - 应用备份与设备迁移均显式禁用，避免配置意外离开设备
 
 ## 项目来源

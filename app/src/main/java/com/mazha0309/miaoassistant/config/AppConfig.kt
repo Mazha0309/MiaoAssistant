@@ -31,6 +31,17 @@ enum class AppScopeMode(val storedValue: String) {
     }
 }
 
+enum class InputWriteMode(val storedValue: String) {
+    ACCESSIBILITY("accessibility"),
+    SHIZUKU("shizuku"),
+    ROOT("root");
+
+    companion object {
+        fun fromStored(value: String?): InputWriteMode =
+            entries.firstOrNull { it.storedValue == value } ?: ACCESSIBILITY
+    }
+}
+
 data class ReplacementRule(
     val from: String,
     val to: String,
@@ -73,6 +84,7 @@ data class AppConfig(
     val rules: List<ReplacementRule> = DEFAULT_RULES,
     val appScopeMode: AppScopeMode = AppScopeMode.EXCLUDE_SELECTED,
     val scopedPackages: Set<String> = emptySet(),
+    val inputWriteMode: InputWriteMode = InputWriteMode.ACCESSIBILITY,
     val keepAliveEnabled: Boolean = false,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val useMonet: Boolean = false,

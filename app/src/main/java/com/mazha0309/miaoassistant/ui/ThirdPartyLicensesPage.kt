@@ -25,9 +25,10 @@ internal fun ThirdPartyLicensesPage(
 ) {
     val entries = listOf(
         LicenseEntry("AndroidX / Jetpack Compose", "Apache License 2.0", "android.googlesource.com/platform/frameworks/support"),
-        LicenseEntry("MiuiX", "Apache License 2.0", "github.com/compose-miuix-ui/miuix"),
-        LicenseEntry("KernelSU Manager UI", "GNU GPL v3", "github.com/tiann/KernelSU"),
-        LicenseEntry("AndroidLiquidGlass", "Apache License 2.0", "github.com/Kyant0/AndroidLiquidGlass"),
+        LicenseEntry("MiuiX contributors", "Apache License 2.0", "github.com/compose-miuix-ui/miuix"),
+        LicenseEntry("tiann / KernelSU contributors", "GNU GPL v3", "github.com/tiann/KernelSU"),
+        LicenseEntry("Kyant0 / AndroidLiquidGlass", "Apache License 2.0", "github.com/Kyant0/AndroidLiquidGlass"),
+        LicenseEntry("RikkaApps / Shizuku API", "Apache License 2.0", "github.com/RikkaApps/Shizuku-API"),
         LicenseEntry("Material Design Icons", "Apache License 2.0", "fonts.google.com/icons"),
     )
 

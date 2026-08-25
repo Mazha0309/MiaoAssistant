@@ -1,4 +1,4 @@
-// Ported from KernelSU Manager's current liquid bottom bar implementation.
+// Ported from tiann/KernelSU and the KernelSU contributors (GPL-3.0).
 package com.mazha0309.miaoassistant.ui.liquid
 
 import androidx.compose.animation.core.Animatable

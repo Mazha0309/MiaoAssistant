@@ -84,6 +84,85 @@ class TextProcessorTest {
         assertTrue(TextProcessor.shouldProcess("正在输入", config))
     }
 
+    @Test
+    fun realtimeModeAppliesRulesAndSuffixWithoutPunctuation() {
+        val config = plainConfig(
+            processingMode = ProcessingMode.REALTIME,
+            enableSentenceSuffix = true,
+            rules = listOf(ReplacementRule("我", "本喵")),
+        )
+        val result = TextProcessor.process("我服了", config)
+        assertEquals("本喵服了喵", result.text)
+        assertEquals(result.text.length - 1, result.selectionStart)
+    }
+
+    @Test
+    fun realtimeSuffixStaysStableWhileTypingBeforeIt() {
+        val config = plainConfig(
+            processingMode = ProcessingMode.REALTIME,
+            enableSentenceSuffix = true,
+            rules = listOf(ReplacementRule("我", "本喵")),
+        )
+        val first = TextProcessor.process("我", config)
+        val withNextCharacter = first.text.substring(0, first.selectionStart) +
+            "服" + first.text.substring(first.selectionStart)
+        val second = TextProcessor.process(
+            withNextCharacter,
+            config,
+            first.selectionStart + 1,
+            first.selectionStart + 1,
+        )
+        assertEquals("本喵服喵", second.text)
+        assertEquals(second.text.length - 1, second.selectionStart)
+    }
+
+    @Test
+    fun realtimeSuffixMovesBehindTextTypedAfterPreviousOutput() {
+        val config = plainConfig(
+            processingMode = ProcessingMode.REALTIME,
+            enableSentenceSuffix = true,
+            rules = listOf(ReplacementRule("我", "本喵")),
+        )
+        val previous = TextProcessor.process("我服", config)
+        assertEquals("本喵服喵", previous.text)
+
+        val rawInput = previous.text + "了"
+        val normalized = TextProcessor.normalizeTypingAfterManagedSuffix(
+            input = rawInput,
+            previousAppliedText = previous.text,
+            config = config,
+            selectionStart = rawInput.length,
+            selectionEnd = rawInput.length,
+        )
+        val result = TextProcessor.process(
+            normalized.text,
+            config,
+            normalized.selectionStart,
+            normalized.selectionEnd,
+        )
+
+        assertEquals("本喵服了喵", result.text)
+        assertEquals(result.text.length - 1, result.selectionStart)
+        assertEquals(result.selectionStart, result.selectionEnd)
+    }
+
+    @Test
+    fun arbitrarySuffixInsideTextIsNotRemovedWithoutMatchingPreviousOutput() {
+        val config = plainConfig(
+            processingMode = ProcessingMode.REALTIME,
+            enableSentenceSuffix = true,
+        )
+        val input = "前喵后"
+        val normalized = TextProcessor.normalizeTypingAfterManagedSuffix(
+            input = input,
+            previousAppliedText = "其他喵",
+            config = config,
+        )
+
+        assertEquals(input, normalized.text)
+        assertEquals(input.length, normalized.selectionStart)
+    }
+
     private fun plainConfig(
         processingMode: ProcessingMode = ProcessingMode.PUNCTUATION,
         enableSentenceSuffix: Boolean = false,

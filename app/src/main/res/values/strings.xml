@@ -13,6 +13,10 @@
     <string name="service_stopped">全局服务未开启</string>
     <string name="service_running_summary">正在处理允许范围内的普通输入框</string>
     <string name="service_stopped_summary">前往系统设置授予无障碍服务权限</string>
+    <string name="service_running_privileged_summary">无障碍监听正在运行，使用 %1$s 写回输入框</string>
+    <string name="service_privileged_waiting_title">还需开启无障碍监听</string>
+    <string name="service_privileged_waiting_summary">%1$s 写回已选择，但仍需无障碍服务识别输入事件</string>
+    <string name="service_privileged_waiting_short">%1$s 已选择，仍需开启无障碍监听</string>
     <string name="open_accessibility_settings">管理无障碍服务</string>
     <string name="master_switch">文本改写</string>
     <string name="master_switch_summary">保留无障碍权限，临时暂停或恢复改写</string>
@@ -25,7 +29,7 @@
     <string name="mode_punctuation">标点触发（推荐）</string>
     <string name="mode_realtime">实时替换</string>
     <string name="sentence_suffix">断句追加</string>
-    <string name="sentence_suffix_summary">在完成的标点句之前追加指定文本</string>
+    <string name="sentence_suffix_summary">实时模式追加到当前句末，标点模式在断句时追加</string>
     <string name="suffix_content">追加内容</string>
     <string name="suffix_content_summary">当前：%1$s</string>
     <string name="random_emoticon">句末颜文字</string>
@@ -41,6 +45,17 @@
 
     <string name="password_protection">密码保护始终开启</string>
     <string name="password_protection_summary">密码、可见密码和数字密码框不会被读取或改写</string>
+    <string name="input_write_mode">文本写回方式</string>
+    <string name="input_write_mode_modern_summary">Android 13+ 通过输入连接直接写回，不使用剪贴板；无障碍仍负责监听</string>
+    <string name="input_write_mode_legacy_summary">Android 12L 及以下的 Shizuku / Root 兼容写回会临时使用剪贴板</string>
+    <string name="input_write_accessibility">无障碍（默认）</string>
+    <string name="input_write_shizuku">Shizuku</string>
+    <string name="input_write_root">Root</string>
+    <string name="shizuku_not_running">Shizuku 未运行，无法切换</string>
+    <string name="shizuku_permission_denied">Shizuku 授权被拒绝，已保留原写回方式</string>
+    <string name="shizuku_permission_granted">已切换为 Shizuku 写回</string>
+    <string name="root_permission_denied">未获得 Root 授权，已保留原写回方式</string>
+    <string name="root_permission_granted">已切换为 Root 写回</string>
     <string name="app_scope_title">应用范围</string>
     <string name="app_scope_mode">生效方式</string>
     <string name="scope_exclude">除所选应用外启用</string>

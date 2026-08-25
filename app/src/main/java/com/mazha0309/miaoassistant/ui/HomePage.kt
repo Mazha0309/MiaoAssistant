@@ -17,6 +17,7 @@ import androidx.compose.material.icons.rounded.ErrorOutline
 import androidx.compose.material.icons.rounded.NotificationsActive
 import androidx.compose.material.icons.rounded.PowerSettingsNew
 import androidx.compose.material.icons.rounded.SwapHoriz
+import androidx.compose.material.icons.rounded.WarningAmber
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mazha0309.miaoassistant.R
 import com.mazha0309.miaoassistant.config.AppConfig
+import com.mazha0309.miaoassistant.config.InputWriteMode
 import com.mazha0309.miaoassistant.config.ProcessingMode
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Card
@@ -54,7 +56,8 @@ internal fun HomePage(
     ) {
         item {
             ServiceHeroCard(
-                enabled = serviceEnabled,
+                serviceEnabled = serviceEnabled,
+                inputWriteMode = config.inputWriteMode,
                 onClick = onOpenAccessibilitySettings,
             )
             Spacer(Modifier.height(12.dp))
@@ -106,24 +109,44 @@ internal fun HomePage(
 
 @Composable
 private fun ServiceHeroCard(
-    enabled: Boolean,
+    serviceEnabled: Boolean,
+    inputWriteMode: InputWriteMode,
     onClick: () -> Unit,
 ) {
     val colorScheme = MiuixTheme.colorScheme
     val isDark = colorScheme.background.luminance() < 0.5f
-    val containerColor = if (enabled) {
-        if (isDark) Color(0xFF1A3825) else Color(0xFFDFFAE4)
-    } else {
-        colorScheme.errorContainer
+    val privilegedWaiting = !serviceEnabled && inputWriteMode != InputWriteMode.ACCESSIBILITY
+    val containerColor = when {
+        serviceEnabled -> if (isDark) Color(0xFF1A3825) else Color(0xFFDFFAE4)
+        privilegedWaiting -> if (isDark) Color(0xFF443713) else Color(0xFFFFF1C2)
+        else -> colorScheme.errorContainer
     }
-    val contentColor = if (enabled) colorScheme.onSurface else colorScheme.onErrorContainer
-    val accent = if (enabled) Color(0xFF36D167) else colorScheme.error
-    val title = stringResource(
-        if (enabled) R.string.service_running else R.string.service_stopped,
+    val contentColor = if (serviceEnabled || privilegedWaiting) colorScheme.onSurface else colorScheme.onErrorContainer
+    val accent = when {
+        serviceEnabled -> Color(0xFF36D167)
+        privilegedWaiting -> Color(0xFFFFB020)
+        else -> colorScheme.error
+    }
+    val modeName = stringResource(
+        when (inputWriteMode) {
+            InputWriteMode.ACCESSIBILITY -> R.string.input_write_accessibility
+            InputWriteMode.SHIZUKU -> R.string.input_write_shizuku
+            InputWriteMode.ROOT -> R.string.input_write_root
+        },
     )
-    val summary = stringResource(
-        if (enabled) R.string.service_running_summary else R.string.service_stopped_summary,
-    )
+    val title = when {
+        serviceEnabled -> stringResource(R.string.service_running)
+        privilegedWaiting -> stringResource(R.string.service_privileged_waiting_title)
+        else -> stringResource(R.string.service_stopped)
+    }
+    val summary = when {
+        serviceEnabled && inputWriteMode != InputWriteMode.ACCESSIBILITY ->
+            stringResource(R.string.service_running_privileged_summary, modeName)
+
+        serviceEnabled -> stringResource(R.string.service_running_summary)
+        privilegedWaiting -> stringResource(R.string.service_privileged_waiting_summary, modeName)
+        else -> stringResource(R.string.service_stopped_summary)
+    }
 
     Card(
         modifier = Modifier
@@ -140,10 +163,10 @@ private fun ServiceHeroCard(
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             Icon(
-                imageVector = if (enabled) {
-                    Icons.Rounded.CheckCircleOutline
-                } else {
-                    Icons.Rounded.ErrorOutline
+                imageVector = when {
+                    serviceEnabled -> Icons.Rounded.CheckCircleOutline
+                    privilegedWaiting -> Icons.Rounded.WarningAmber
+                    else -> Icons.Rounded.ErrorOutline
                 },
                 contentDescription = null,
                 modifier = Modifier

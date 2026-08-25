@@ -24,13 +24,16 @@ import com.mazha0309.miaoassistant.apps.InstalledApp
 import com.mazha0309.miaoassistant.apps.InstalledAppsRepository
 import com.mazha0309.miaoassistant.config.AppConfig
 import com.mazha0309.miaoassistant.config.ConfigRepository
+import com.mazha0309.miaoassistant.config.InputWriteMode
 import com.mazha0309.miaoassistant.keepalive.KeepAliveService
+import com.mazha0309.miaoassistant.privileged.RootPermission
 import com.mazha0309.miaoassistant.service.GlobalInputAccessibilityService
 import com.mazha0309.miaoassistant.ui.MiaoAssistantApp
 import com.mazha0309.miaoassistant.ui.MiaoAssistantTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import rikka.shizuku.Shizuku
 
 class MainActivity : ComponentActivity() {
     private lateinit var configRepository: ConfigRepository
@@ -38,6 +41,19 @@ class MainActivity : ComponentActivity() {
     private var serviceEnabled by mutableStateOf(false)
     private var batteryOptimizationIgnored by mutableStateOf(false)
     private var installedApps by mutableStateOf<List<InstalledApp>?>(null)
+    private var pendingInputWriteMode: InputWriteMode? = null
+    private val shizukuPermissionListener = Shizuku.OnRequestPermissionResultListener { requestCode, grantResult ->
+        if (requestCode != SHIZUKU_PERMISSION_REQUEST || pendingInputWriteMode != InputWriteMode.SHIZUKU) {
+            return@OnRequestPermissionResultListener
+        }
+        pendingInputWriteMode = null
+        if (grantResult == PackageManager.PERMISSION_GRANTED) {
+            saveConfig(config.copy(inputWriteMode = InputWriteMode.SHIZUKU))
+            Toast.makeText(this, R.string.shizuku_permission_granted, Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(this, R.string.shizuku_permission_denied, Toast.LENGTH_SHORT).show()
+        }
+    }
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission(),
     ) { granted ->
@@ -53,6 +69,7 @@ class MainActivity : ComponentActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         configRepository = ConfigRepository(this)
         config = configRepository.load()
+        Shizuku.addRequestPermissionResultListener(shizukuPermissionListener)
         lifecycleScope.launch {
             installedApps = withContext(Dispatchers.IO) {
                 InstalledAppsRepository.load(this@MainActivity)
@@ -70,6 +87,7 @@ class MainActivity : ComponentActivity() {
                     serviceEnabled = serviceEnabled,
                     batteryOptimizationIgnored = batteryOptimizationIgnored,
                     onConfigChange = ::saveConfig,
+                    onInputWriteModeChange = ::setInputWriteMode,
                     onKeepAliveChange = ::setKeepAlive,
                     onOpenAccessibilitySettings = ::openAccessibilitySettings,
                     onOpenBatterySettings = ::openBatteryOptimizationSettings,
@@ -83,6 +101,11 @@ class MainActivity : ComponentActivity() {
                 )
             }
         }
+    }
+
+    override fun onDestroy() {
+        Shizuku.removeRequestPermissionResultListener(shizukuPermissionListener)
+        super.onDestroy()
     }
 
     override fun onResume() {
@@ -109,6 +132,52 @@ class MainActivity : ComponentActivity() {
     private fun saveConfig(updated: AppConfig) {
         config = updated
         configRepository.save(updated)
+    }
+
+    private fun setInputWriteMode(mode: InputWriteMode) {
+        pendingInputWriteMode = null
+        when (mode) {
+            InputWriteMode.ACCESSIBILITY -> saveConfig(config.copy(inputWriteMode = mode))
+            InputWriteMode.SHIZUKU -> requestShizukuMode()
+            InputWriteMode.ROOT -> requestRootMode()
+        }
+    }
+
+    private fun requestShizukuMode() {
+        val running = runCatching { Shizuku.pingBinder() }.getOrDefault(false)
+        if (!running) {
+            Toast.makeText(this, R.string.shizuku_not_running, Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val permission = runCatching { Shizuku.checkSelfPermission() }.getOrDefault(PackageManager.PERMISSION_DENIED)
+        if (permission == PackageManager.PERMISSION_GRANTED) {
+            saveConfig(config.copy(inputWriteMode = InputWriteMode.SHIZUKU))
+            Toast.makeText(this, R.string.shizuku_permission_granted, Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        pendingInputWriteMode = InputWriteMode.SHIZUKU
+        runCatching { Shizuku.requestPermission(SHIZUKU_PERMISSION_REQUEST) }
+            .onFailure {
+                pendingInputWriteMode = null
+                Toast.makeText(this, R.string.shizuku_not_running, Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun requestRootMode() {
+        pendingInputWriteMode = InputWriteMode.ROOT
+        lifecycleScope.launch {
+            val granted = withContext(Dispatchers.IO) { RootPermission.request() }
+            if (pendingInputWriteMode != InputWriteMode.ROOT) return@launch
+            pendingInputWriteMode = null
+            if (granted) {
+                saveConfig(config.copy(inputWriteMode = InputWriteMode.ROOT))
+                Toast.makeText(this@MainActivity, R.string.root_permission_granted, Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this@MainActivity, R.string.root_permission_denied, Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun setKeepAlive(enabled: Boolean) {
@@ -171,5 +240,9 @@ class MainActivity : ComponentActivity() {
                 serviceInfo.packageName == packageName &&
                     serviceInfo.name == GlobalInputAccessibilityService::class.java.name
             }
+    }
+
+    companion object {
+        private const val SHIZUKU_PERMISSION_REQUEST = 1309
     }
 }
