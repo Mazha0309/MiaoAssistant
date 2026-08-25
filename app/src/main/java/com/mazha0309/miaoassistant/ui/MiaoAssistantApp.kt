@@ -212,7 +212,6 @@ private fun MainPager(
                         serviceEnabled = serviceEnabled,
                         batteryOptimizationIgnored = batteryOptimizationIgnored,
                         bottomInnerPadding = bottomInnerPadding,
-                        onConfigChange = onConfigChange,
                         onKeepAliveChange = onKeepAliveChange,
                         onOpenAccessibilitySettings = onOpenAccessibilitySettings,
                         onOpenBatterySettings = onOpenBatterySettings,

@@ -7,6 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AccessibilityNew
 import androidx.compose.material.icons.rounded.Apps
 import androidx.compose.material.icons.rounded.BatteryFull
+import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.NotificationsActive
 import androidx.compose.runtime.Composable
@@ -28,7 +29,6 @@ internal fun ScopePage(
     serviceEnabled: Boolean,
     batteryOptimizationIgnored: Boolean,
     bottomInnerPadding: Dp,
-    onConfigChange: (AppConfig) -> Unit,
     onKeepAliveChange: (Boolean) -> Unit,
     onOpenAccessibilitySettings: () -> Unit,
     onOpenBatterySettings: () -> Unit,
@@ -98,11 +98,13 @@ internal fun ScopePage(
                     startAction = { PreferenceIcon(Icons.Rounded.BatteryFull) },
                     onClick = onOpenBatterySettings,
                 )
-            }
-
-            if (config.keepAliveEnabled) {
-                Spacer(Modifier.height(12.dp))
-                InfoNotice(stringResource(R.string.keep_alive_limit))
+                if (config.keepAliveEnabled) {
+                    BasicComponent(
+                        title = stringResource(R.string.keep_alive_limit_title),
+                        summary = stringResource(R.string.keep_alive_limit),
+                        startAction = { PreferenceIcon(Icons.Rounded.Info) },
+                    )
+                }
             }
         }
     }

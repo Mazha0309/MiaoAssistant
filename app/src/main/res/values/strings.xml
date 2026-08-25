@@ -58,6 +58,7 @@
 
     <string name="keep_alive">常驻通知保活</string>
     <string name="keep_alive_summary">用可见的低优先级通知提高进程优先级，并在开机后恢复</string>
+    <string name="keep_alive_limit_title">保活说明</string>
     <string name="keep_alive_limit">无障碍服务的生命周期仍由 Android 系统管理；常驻服务只能降低被 OEM 后台策略终止的概率，不是绝对保证。</string>
     <string name="battery_optimization">电池优化</string>
     <string name="battery_optimization_ignored">已允许后台运行</string>
