@@ -130,6 +130,7 @@ class TextProcessorTest {
         val normalized = TextProcessor.normalizeTypingAfterManagedSuffix(
             input = rawInput,
             previousAppliedText = previous.text,
+            previousManagedSuffixStart = previous.managedSuffixStart,
             config = config,
             selectionStart = rawInput.length,
             selectionEnd = rawInput.length,
@@ -147,6 +148,37 @@ class TextProcessorTest {
     }
 
     @Test
+    fun ruleProducedSuffixIsNotMovedWhenTypingContinues() {
+        val config = plainConfig(
+            processingMode = ProcessingMode.REALTIME,
+            enableSentenceSuffix = true,
+            rules = listOf(ReplacementRule("我", "本喵")),
+        )
+        val previous = TextProcessor.process("我", config)
+        assertEquals("本喵", previous.text)
+        assertEquals(null, previous.managedSuffixStart)
+
+        val rawInput = previous.text + "好"
+        val normalized = TextProcessor.normalizeTypingAfterManagedSuffix(
+            input = rawInput,
+            previousAppliedText = previous.text,
+            previousManagedSuffixStart = previous.managedSuffixStart,
+            config = config,
+            selectionStart = rawInput.length,
+            selectionEnd = rawInput.length,
+        )
+        val result = TextProcessor.process(
+            normalized.text,
+            config,
+            normalized.selectionStart,
+            normalized.selectionEnd,
+        )
+
+        assertEquals("本喵好喵", result.text)
+        assertEquals(result.text.length - 1, result.managedSuffixStart)
+    }
+
+    @Test
     fun arbitrarySuffixInsideTextIsNotRemovedWithoutMatchingPreviousOutput() {
         val config = plainConfig(
             processingMode = ProcessingMode.REALTIME,
@@ -156,6 +188,7 @@ class TextProcessorTest {
         val normalized = TextProcessor.normalizeTypingAfterManagedSuffix(
             input = input,
             previousAppliedText = "其他喵",
+            previousManagedSuffixStart = null,
             config = config,
         )
 

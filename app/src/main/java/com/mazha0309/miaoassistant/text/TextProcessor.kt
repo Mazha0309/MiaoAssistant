@@ -8,6 +8,7 @@ data class ProcessedText(
     val text: String,
     val selectionStart: Int,
     val selectionEnd: Int,
+    val managedSuffixStart: Int? = null,
 )
 
 object TextProcessor {
@@ -21,18 +22,23 @@ object TextProcessor {
     fun normalizeTypingAfterManagedSuffix(
         input: String,
         previousAppliedText: String?,
+        previousManagedSuffixStart: Int? = null,
         config: AppConfig,
         selectionStart: Int = input.length,
         selectionEnd: Int = selectionStart,
     ): ProcessedText {
         val suffix = config.sentenceSuffix
         val previous = previousAppliedText
+        val managedSuffixStart = previousManagedSuffixStart
         if (
             config.processingMode != ProcessingMode.REALTIME ||
             !config.enableSentenceSuffix ||
             suffix.isEmpty() ||
             previous == null ||
-            !previous.endsWith(suffix) ||
+            managedSuffixStart == null ||
+            managedSuffixStart < 0 ||
+            managedSuffixStart + suffix.length != previous.length ||
+            !previous.regionMatches(managedSuffixStart, suffix, 0, suffix.length) ||
             input.length <= previous.length ||
             !input.startsWith(previous) ||
             selectionStart < previous.length ||
@@ -45,7 +51,7 @@ object TextProcessor {
             )
         }
 
-        val removalStart = previous.length - suffix.length
+        val removalStart = managedSuffixStart
         val removalEnd = previous.length
         fun mapSelection(index: Int): Int = when {
             index <= removalStart -> index
@@ -126,6 +132,7 @@ object TextProcessor {
             text = mapped.text,
             selectionStart = mapped.selectionStart.coerceIn(0, mapped.text.length),
             selectionEnd = mapped.selectionEnd.coerceIn(0, mapped.text.length),
+            managedSuffixStart = mapped.managedSuffixStart,
         )
     }
 
@@ -227,6 +234,7 @@ object TextProcessor {
             text = result,
             selectionStart = mapSelection(mapped.selectionStart),
             selectionEnd = mapSelection(mapped.selectionEnd),
+            managedSuffixStart = contentEnd,
         )
     }
 
@@ -327,5 +335,6 @@ object TextProcessor {
         val text: String,
         val selectionStart: Int,
         val selectionEnd: Int,
+        val managedSuffixStart: Int? = null,
     )
 }

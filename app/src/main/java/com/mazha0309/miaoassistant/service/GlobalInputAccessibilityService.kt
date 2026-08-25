@@ -18,6 +18,7 @@ import com.mazha0309.miaoassistant.config.ConfigRepository
 import com.mazha0309.miaoassistant.config.InputWriteMode
 import com.mazha0309.miaoassistant.config.ProcessingMode
 import com.mazha0309.miaoassistant.privileged.InputWriteController
+import com.mazha0309.miaoassistant.text.ProcessedText
 import com.mazha0309.miaoassistant.text.TextProcessor
 
 class GlobalInputAccessibilityService : AccessibilityService() {
@@ -34,6 +35,7 @@ class GlobalInputAccessibilityService : AccessibilityService() {
     private var processing = false
     private var lastNodeKey: String? = null
     private var lastAppliedText: String? = null
+    private var lastAppliedManagedSuffixStart: Int? = null
     private var lastWriteAt = 0L
     private var lastInputPackage: String? = null
     private var lastInputEventAt = 0L
@@ -124,6 +126,7 @@ class GlobalInputAccessibilityService : AccessibilityService() {
             cacheFocusedNode(source, packageName)
             lastNodeKey = nodeKey(source)
             lastAppliedText = null
+            lastAppliedManagedSuffixStart = null
             lastWriteAt = 0L
         } finally {
             recycle(source)
@@ -240,6 +243,7 @@ class GlobalInputAccessibilityService : AccessibilityService() {
             val normalized = TextProcessor.normalizeTypingAfterManagedSuffix(
                 input = original,
                 previousAppliedText = lastAppliedText.takeIf { key == lastNodeKey },
+                previousManagedSuffixStart = lastAppliedManagedSuffixStart.takeIf { key == lastNodeKey },
                 config = config,
                 selectionStart = selectionStart,
                 selectionEnd = selectionEnd,
@@ -264,7 +268,7 @@ class GlobalInputAccessibilityService : AccessibilityService() {
                             processed.selectionEnd,
                         )
                     ) {
-                        recordSuccessfulWrite(key, processed.text)
+                        recordSuccessfulWrite(key, processed)
                         pendingChange = null
                     } else if (
                         canUseInputConnection &&
@@ -276,7 +280,7 @@ class GlobalInputAccessibilityService : AccessibilityService() {
                             selectionEnd = processed.selectionEnd,
                         )
                     ) {
-                        recordSuccessfulWrite(key, processed.text)
+                        recordSuccessfulWrite(key, processed)
                         pendingChange = null
                     } else {
                         retry(change, "accessible text write rejected")
@@ -296,7 +300,7 @@ class GlobalInputAccessibilityService : AccessibilityService() {
                             selectionEnd = processed.selectionEnd,
                         )
                     ) {
-                        recordSuccessfulWrite(key, processed.text)
+                        recordSuccessfulWrite(key, processed)
                         pendingChange = null
                     } else if (canUseInputConnection) {
                         // Android 13+ must never silently fall back to clipboard paste.
@@ -317,7 +321,7 @@ class GlobalInputAccessibilityService : AccessibilityService() {
                             },
                         )
                         if (accepted) {
-                            recordSuccessfulWrite(key, processed.text)
+                            recordSuccessfulWrite(key, processed)
                             pendingChange = null
                         } else {
                             retry(change, "${mode.storedValue} writer unavailable")
@@ -334,15 +338,17 @@ class GlobalInputAccessibilityService : AccessibilityService() {
         }
     }
 
-    private fun recordSuccessfulWrite(key: String, text: String) {
+    private fun recordSuccessfulWrite(key: String, processed: ProcessedText) {
         lastNodeKey = key
-        lastAppliedText = text
+        lastAppliedText = processed.text
+        lastAppliedManagedSuffixStart = processed.managedSuffixStart
         lastWriteAt = SystemClock.uptimeMillis()
     }
 
     private fun clearWriteEcho(key: String, text: String) {
         if (lastNodeKey == key && lastAppliedText == text) {
             lastAppliedText = null
+            lastAppliedManagedSuffixStart = null
             lastWriteAt = 0L
         }
     }
@@ -498,6 +504,7 @@ class GlobalInputAccessibilityService : AccessibilityService() {
         clearCachedNode()
         lastNodeKey = null
         lastAppliedText = null
+        lastAppliedManagedSuffixStart = null
         lastWriteAt = 0L
         lastInputPackage = null
         lastInputEventAt = 0L
