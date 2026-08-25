@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
-    android:accessibilityEventTypes="typeWindowStateChanged|typeViewTextChanged|typeViewClicked"
-    android:packageNames="com.tencent.mobileqq,com.tencent.mobileqqi"
+    android:accessibilityEventTypes="typeViewTextChanged|typeViewFocused|typeWindowStateChanged|typeWindowsChanged"
     android:accessibilityFeedbackType="feedbackGeneric"
-    android:notificationTimeout="50"
-    android:accessibilityFlags="flagRetrieveInteractiveWindows|flagReportViewIds|flagDefault"
-    android:canRetrieveWindowContent="true"/>
+    android:notificationTimeout="40"
+    android:accessibilityFlags="flagRetrieveInteractiveWindows|flagReportViewIds|flagIncludeNotImportantViews"
+    android:canRetrieveWindowContent="true"
+    android:description="@string/accessibility_service_description"
+    android:settingsActivity="com.mazha0309.miaoassistant.MainActivity" />

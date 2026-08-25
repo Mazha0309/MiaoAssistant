@@ -1,32 +1,79 @@
 plugins {
     id 'com.android.application'
+    id 'org.jetbrains.kotlin.plugin.compose'
 }
 
 android {
-    namespace 'com.example.u7e5f3218e9'
-    compileSdk 34
+    namespace 'com.mazha0309.miaoassistant'
+    compileSdk {
+        version = release(37) {
+            minorApiLevel = 0
+        }
+    }
 
     defaultConfig {
-        applicationId "com.example.u7e5f3218e9"
+        applicationId "com.mazha0309.miaoassistant"
         minSdk 23
-        targetSdk 34
-        versionCode 1
-        versionName "1.0"
+        targetSdk 37
+        versionCode 2
+        versionName "2.0.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 
+    buildFeatures {
+        compose true
+        buildConfig true
+    }
+
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    packaging {
+        resources {
+            excludes += '/META-INF/{AL2.0,LGPL2.1}'
+        }
+    }
+
+    lint {
+        abortOnError true
+        checkReleaseBuilds true
+        warningsAsErrors false
+    }
+
+    testOptions {
+        unitTests.returnDefaultValues = true
     }
 }
 
 dependencies {
-    // 该工程仅使用原生 Android 框架 API，无第三方依赖
+    implementation 'androidx.core:core-ktx:1.19.0'
+    implementation 'androidx.activity:activity-compose:1.13.0'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.11.0'
+
+    implementation platform('androidx.compose:compose-bom:2026.08.00')
+    implementation 'androidx.compose.material:material-icons-extended'
+    implementation 'androidx.compose.ui:ui'
+    implementation 'androidx.compose.ui:ui-tooling-preview'
+
+    // Keep in sync with the MiuiX generation used by KernelSU Manager.
+    implementation 'top.yukonga.miuix.kmp:miuix-ui-android:0.9.3'
+    implementation 'top.yukonga.miuix.kmp:miuix-preference-android:0.9.3'
+    implementation 'top.yukonga.miuix.kmp:miuix-icons-android:0.9.3'
+    implementation 'top.yukonga.miuix.kmp:miuix-blur-android:0.9.3'
+
+    debugImplementation 'androidx.compose.ui:ui-tooling'
+    debugImplementation 'androidx.compose.ui:ui-test-manifest'
+
+    testImplementation 'junit:junit:4.13.2'
 }

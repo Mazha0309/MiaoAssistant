@@ -1,3 +1,115 @@
 <resources>
-    <string name="app_name">QQ喵喵助手</string>
+    <string name="app_name">喵喵输入助手</string>
+    <string name="accessibility_service_name">喵喵全局输入服务</string>
+    <string name="accessibility_service_description">在普通非密码输入框中按你的规则进行本地文本替换。不联网，不保存输入内容。</string>
+
+    <string name="nav_home">首页</string>
+    <string name="nav_rewrite">改写</string>
+    <string name="nav_scope">范围</string>
+    <string name="nav_settings">设置</string>
+    <string name="rewrite_page_title">文本改写</string>
+    <string name="scope_page_title">范围与运行</string>
+    <string name="service_running">全局服务已开启</string>
+    <string name="service_stopped">全局服务未开启</string>
+    <string name="service_running_summary">正在处理允许范围内的普通输入框</string>
+    <string name="service_stopped_summary">前往系统设置授予无障碍服务权限</string>
+    <string name="open_accessibility_settings">管理无障碍服务</string>
+    <string name="master_switch">文本改写</string>
+    <string name="master_switch_summary">保留无障碍权限，临时暂停或恢复改写</string>
+    <string name="tap_to_manage_service">点按管理无障碍服务</string>
+    <string name="state_enabled">已开启</string>
+    <string name="state_disabled">未开启</string>
+
+    <string name="processing_mode">触发方式</string>
+    <string name="processing_mode_summary">标点模式更稳定，实时模式会边输入边替换</string>
+    <string name="mode_punctuation">标点触发（推荐）</string>
+    <string name="mode_realtime">实时替换</string>
+    <string name="sentence_suffix">断句追加</string>
+    <string name="sentence_suffix_summary">在完成的标点句之前追加指定文本</string>
+    <string name="suffix_content">追加内容</string>
+    <string name="suffix_content_summary">当前：%1$s</string>
+    <string name="random_emoticon">句末颜文字</string>
+    <string name="random_emoticon_summary">句子完成后在输入末尾加入稳定随机颜文字</string>
+    <string name="custom_emoticons">颜文字库</string>
+    <string name="custom_emoticons_builtin">使用内置颜文字库</string>
+    <string name="custom_emoticons_count">%1$d 个自定义颜文字</string>
+
+    <string name="replacement_rules">文本替换规则</string>
+    <string name="replacement_rules_empty">暂无规则</string>
+    <string name="replacement_rules_count">%1$d 条规则，按顺序应用</string>
+    <string name="rule_editor_hint">每行一条：原文=替换文。也支持全角等号和 →，替换文可留空。</string>
+
+    <string name="password_protection">密码保护始终开启</string>
+    <string name="password_protection_summary">密码、可见密码和数字密码框不会被读取或改写</string>
+    <string name="app_scope_title">应用范围</string>
+    <string name="app_scope_mode">生效方式</string>
+    <string name="scope_exclude">除所选应用外启用</string>
+    <string name="scope_include">仅在所选应用启用</string>
+    <string name="scope_exclude_summary">在所有可用应用中生效，但跳过下方勾选的应用</string>
+    <string name="scope_include_summary">只在下方勾选的应用中生效</string>
+    <string name="scope_all_apps">所有应用均可生效</string>
+    <string name="scope_no_apps">尚未选择生效应用</string>
+    <string name="scope_excluded_count">已排除 %1$d 个应用</string>
+    <string name="scope_included_count">仅在 %1$d 个应用生效</string>
+    <string name="search_apps">搜索应用或包名</string>
+    <string name="loading_apps">正在读取应用列表</string>
+    <string name="loading_apps_summary">只读取具有启动入口的已安装应用</string>
+    <string name="no_apps_found">没有匹配的应用</string>
+
+    <string name="keep_alive">常驻通知保活</string>
+    <string name="keep_alive_summary">用可见的低优先级通知提高进程优先级，并在开机后恢复</string>
+    <string name="keep_alive_limit">无障碍服务的生命周期仍由 Android 系统管理；常驻服务只能降低被 OEM 后台策略终止的概率，不是绝对保证。</string>
+    <string name="battery_optimization">电池优化</string>
+    <string name="battery_optimization_ignored">已允许后台运行</string>
+    <string name="battery_optimization_active">仍可能被系统限制，点击前往设置</string>
+    <string name="battery_settings_unavailable">无法打开电池优化设置</string>
+    <string name="notification_permission_required">需要通知权限才能开启可见的常驻保活</string>
+    <string name="keep_alive_start_failed">系统拒绝启动常驻服务</string>
+    <string name="keep_alive_channel_name">后台保活</string>
+    <string name="keep_alive_channel_description">显示喵喵输入助手的持续运行状态</string>
+    <string name="keep_alive_notification_title">喵喵输入助手正在运行</string>
+    <string name="keep_alive_notification_text">全局文本改写保活已开启</string>
+    <string name="keep_alive_notification_stop">关闭保活</string>
+
+    <string name="section_preview">实时预览</string>
+    <string name="preview_input">输入一段文本</string>
+    <string name="preview_result">处理结果</string>
+    <string name="preview_sample">今天我很开心，你准备好了吗？</string>
+
+    <string name="theme_mode">主题模式</string>
+    <string name="theme_mode_summary">选择跟随系统、浅色或深色</string>
+    <string name="theme_system">跟随系统</string>
+    <string name="theme_light">浅色</string>
+    <string name="theme_dark">深色</string>
+    <string name="settings_appearance">主题与界面</string>
+    <string name="settings_appearance_summary">%1$s · %2$s</string>
+    <string name="bar_standard">标准底栏</string>
+    <string name="bar_floating">悬浮底栏</string>
+    <string name="monet_color">莫奈取色</string>
+    <string name="monet_color_summary">从系统壁纸提取主题色，默认关闭</string>
+    <string name="app_bar_blur">顶栏背景模糊</string>
+    <string name="app_bar_blur_summary">折叠顶栏实时采样并模糊页面内容</string>
+    <string name="floating_bottom_bar">悬浮底栏</string>
+    <string name="floating_bottom_bar_summary">使用独立悬浮的 MiuiX 分页栏</string>
+    <string name="liquid_glass">液态玻璃</string>
+    <string name="liquid_glass_summary">实时折射底栏后的内容，并加入色散、高光与拖拽镜片效果</string>
+    <string name="blur_unsupported_summary">需要 Android 13 或更高版本</string>
+    <string name="about">关于</string>
+    <string name="about_description">面向普通非密码输入框的本地文本改写工具。输入内容不联网、不落盘。</string>
+    <string name="third_party_licenses">第三方使用许可</string>
+    <string name="third_party_licenses_summary">查看开源组件、来源与许可证</string>
+    <string name="project_license">本项目许可证</string>
+    <string name="project_license_summary">GNU Affero General Public License v3.0；完整声明见源码中的 LICENSE 与 THIRD_PARTY_NOTICES.md。</string>
+    <string name="version_summary">版本 %1$s</string>
+    <string name="back">返回</string>
+
+    <string name="edit_suffix_title">编辑追加内容</string>
+    <string name="edit_suffix_hint">例如：喵</string>
+    <string name="edit_rules_title">编辑替换规则</string>
+    <string name="edit_emoticons_title">编辑颜文字库</string>
+    <string name="edit_emoticons_hint">每行一个；全部留空恢复内置库。</string>
+    <string name="cancel">取消</string>
+    <string name="save">保存</string>
+    <string name="invalid_rules_ignored">已忽略 %1$d 行无效规则</string>
+    <string name="accessibility_settings_unavailable">无法打开无障碍设置</string>
 </resources>

@@ -10,5 +10,10 @@ local.properties
 *.iml
 captures/
 
+# Signing material
+*.jks
+*.keystore
+keystore.properties
+
 # 系统
 .DS_Store

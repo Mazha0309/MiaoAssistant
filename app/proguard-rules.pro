@@ -1,1 +1,4 @@
-# 无障碍服务与配置（纯 Java + 原生 API），当前 release 未开启混淆，无需额外规则
+# Android components referenced from AndroidManifest.xml.
+-keep class com.mazha0309.miaoassistant.service.GlobalInputAccessibilityService { *; }
+-keep class com.mazha0309.miaoassistant.keepalive.KeepAliveService { *; }
+-keep class com.mazha0309.miaoassistant.keepalive.BootReceiver { *; }
