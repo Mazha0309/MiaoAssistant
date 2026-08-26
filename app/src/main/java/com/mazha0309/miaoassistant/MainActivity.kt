@@ -1,6 +1,5 @@
 package com.mazha0309.miaoassistant
 
-import android.accessibilityservice.AccessibilityServiceInfo
 import android.Manifest
 import android.content.ActivityNotFoundException
 import android.content.Intent
@@ -9,7 +8,6 @@ import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
-import android.view.accessibility.AccessibilityManager
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -86,6 +84,13 @@ class MainActivity : ComponentActivity() {
                 KeepAliveService.running.collect { running -> keepAliveRunning = running }
             }
         }
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                GlobalInputAccessibilityService.connected.collect { connected ->
+                    serviceEnabled = connected
+                }
+            }
+        }
 
         setContent {
             MiaoAssistantTheme(
@@ -128,7 +133,6 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         config = configRepository.load()
-        serviceEnabled = isAccessibilityServiceEnabled()
         batteryOptimizationIgnored = getSystemService(PowerManager::class.java)
             ?.isIgnoringBatteryOptimizations(packageName)
             ?: false
@@ -353,17 +357,6 @@ class MainActivity : ComponentActivity() {
                 this,
                 Manifest.permission.POST_NOTIFICATIONS,
             ) == PackageManager.PERMISSION_GRANTED
-
-    private fun isAccessibilityServiceEnabled(): Boolean {
-        val manager = getSystemService(AccessibilityManager::class.java) ?: return false
-        return manager
-            .getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_ALL_MASK)
-            .any { info ->
-                val serviceInfo = info.resolveInfo?.serviceInfo ?: return@any false
-                serviceInfo.packageName == packageName &&
-                    serviceInfo.name == GlobalInputAccessibilityService::class.java.name
-            }
-    }
 
     companion object {
         private const val SHIZUKU_PERMISSION_REQUEST = 1309

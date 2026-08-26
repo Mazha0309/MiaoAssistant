@@ -20,6 +20,10 @@ import com.mazha0309.miaoassistant.config.ProcessingMode
 import com.mazha0309.miaoassistant.privileged.InputWriteController
 import com.mazha0309.miaoassistant.text.ProcessedText
 import com.mazha0309.miaoassistant.text.TextProcessor
+import java.util.concurrent.atomic.AtomicInteger
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 class GlobalInputAccessibilityService : AccessibilityService() {
     private lateinit var configRepository: ConfigRepository
@@ -39,6 +43,7 @@ class GlobalInputAccessibilityService : AccessibilityService() {
     private var lastWriteAt = 0L
     private var lastInputPackage: String? = null
     private var lastInputEventAt = 0L
+    private var connectionReported = false
 
     override fun onServiceConnected() {
         super.onServiceConnected()
@@ -71,6 +76,7 @@ class GlobalInputAccessibilityService : AccessibilityService() {
                 }
             packageNames = null
         }
+        reportConnected()
         Log.i(TAG, "Global input service connected")
     }
 
@@ -531,11 +537,29 @@ class GlobalInputAccessibilityService : AccessibilityService() {
     override fun onInterrupt() = resetSession()
 
     override fun onDestroy() {
+        reportDisconnected()
         resetSession()
         preferenceListener?.let { listener -> configRepository.unregisterListener(listener) }
         preferenceListener = null
         if (::inputWriteController.isInitialized) inputWriteController.shutdown()
         super.onDestroy()
+    }
+
+    private fun reportConnected() {
+        if (connectionReported) return
+        connectionReported = true
+        activeConnectionCount.incrementAndGet()
+        mutableConnected.value = true
+    }
+
+    private fun reportDisconnected() {
+        if (!connectionReported) return
+        connectionReported = false
+        val remaining = activeConnectionCount.decrementAndGet()
+        if (remaining <= 0) {
+            activeConnectionCount.set(0)
+            mutableConnected.value = false
+        }
     }
 
     @Suppress("DEPRECATION")
@@ -544,6 +568,10 @@ class GlobalInputAccessibilityService : AccessibilityService() {
     }
 
     companion object {
+        private val activeConnectionCount = AtomicInteger(0)
+        private val mutableConnected = MutableStateFlow(false)
+        val connected: StateFlow<Boolean> = mutableConnected.asStateFlow()
+
         private const val TAG = "MiaoInputService"
         private const val SYSTEM_UI_PACKAGE = "com.android.systemui"
         private const val WRITE_ECHO_WINDOW_MS = 1_500L
