@@ -59,10 +59,6 @@ internal fun AboutPage(
             Spacer(Modifier.height(12.dp))
             Card(modifier = Modifier.fillMaxWidth()) {
                 BasicComponent(
-                    title = stringResource(R.string.upstream_project),
-                    summary = stringResource(R.string.upstream_project_credit),
-                )
-                BasicComponent(
                     title = stringResource(R.string.current_maintainer),
                     summary = stringResource(R.string.current_maintainer_credit),
                 )

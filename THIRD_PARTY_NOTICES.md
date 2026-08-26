@@ -12,3 +12,7 @@ MiaoAssistant includes or is built with the following open-source projects:
 The liquid floating navigation bar is ported from KernelSU Manager. KernelSU's file identifies its implementation as adapted from the MiuiX `IosLiquidGlassNavigationBar` example, which in turn credits AndroidLiquidGlass. Source attribution comments are preserved alongside the ported code.
 
 License texts are available from each linked upstream project. MiaoAssistant itself is distributed under the GNU Affero General Public License v3.0; see `LICENSE`.
+
+## Project provenance
+
+MiaoAssistant was initially based on `QiCaiJie114514/QQMiaoAssistant`. That historical repository has been deleted; this project is now independently maintained by Mazha0309.

@@ -137,8 +137,6 @@
     <string name="blur_unsupported_summary">需要 Android 13 或更高版本</string>
     <string name="about">关于</string>
     <string name="about_description">面向普通非密码输入框的本地文本改写工具。输入内容不联网、不落盘。</string>
-    <string name="upstream_project">原项目作者</string>
-    <string name="upstream_project_credit">QiCaiJie114514 · QQMiaoAssistant</string>
     <string name="current_maintainer">维护与重构</string>
     <string name="current_maintainer_credit">Mazha0309</string>
     <string name="development_collaboration">开发协作</string>
@@ -147,6 +145,8 @@
     <string name="third_party_licenses_summary">查看开源组件、来源与许可证</string>
     <string name="project_license">本项目许可证</string>
     <string name="project_license_summary">GNU Affero General Public License v3.0；完整声明见源码中的 LICENSE 与 THIRD_PARTY_NOTICES.md。</string>
+    <string name="historical_source">历史来源</string>
+    <string name="historical_source_summary">本项目最初基于 QiCaiJie114514/QQMiaoAssistant 重构，原仓库现已删除；现由 Mazha0309 独立维护。</string>
     <string name="version_summary">版本 %1$s</string>
     <string name="back">返回</string>
 

@@ -54,6 +54,13 @@ internal fun ThirdPartyLicensesPage(
                     summary = stringResource(R.string.project_license_summary),
                 )
             }
+            Spacer(Modifier.height(12.dp))
+            Card(modifier = Modifier.fillMaxWidth()) {
+                BasicComponent(
+                    title = stringResource(R.string.historical_source),
+                    summary = stringResource(R.string.historical_source_summary),
+                )
+            }
         }
     }
 }

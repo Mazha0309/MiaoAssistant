@@ -93,6 +93,6 @@ Shizuku/Root 只替换“写回”通道，仍需开启无障碍服务来识别�
 
 ## 项目来源
 
-本仓库 fork 自 [QiCaiJie114514/QQMiaoAssistant](https://github.com/QiCaiJie114514/QQMiaoAssistant)。上游工程说明其由“QQ 喵喵助手”APK 逆向重建，原作者未知；如涉及原作者权益，请按上游仓库说明联系处理。
+本项目最初基于 `QiCaiJie114514/QQMiaoAssistant` 重构，该历史仓库现已删除；当前项目由 Mazha0309 独立维护。
 
 本次重构已更换应用 ID、全局输入引擎、配置模型、界面、主题、图标、构建链与测试，不代表原应用作者。
