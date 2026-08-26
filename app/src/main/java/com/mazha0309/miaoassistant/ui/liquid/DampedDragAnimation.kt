@@ -1,4 +1,6 @@
 // Ported from tiann/KernelSU and the KernelSU contributors (GPL-3.0).
+// Synced with KernelSU commit 4521784328352c54334beb29e05c74360b60d7cb;
+// settleToValue is the local integration guard that avoids a second release pulse.
 package com.mazha0309.miaoassistant.ui.liquid
 
 import androidx.compose.animation.core.Animatable
@@ -122,12 +124,27 @@ class DampedDragAnimation(
         animationScope.launch {
             mutatorMutex.mutate {
                 press()
-                val targetValue = value.coerceIn(valueRange)
-                launch { valueAnimation.animateTo(targetValue, valueAnimationSpec) }
-                if (velocity != 0f) {
-                    launch { velocityAnimation.animateTo(0f, velocityAnimationSpec) }
-                }
+                animateValueTo(value)
                 release()
+            }
+        }
+    }
+
+    /** Settles a completed drag without starting a second press/release pulse. */
+    fun settleToValue(value: Float) {
+        animationScope.launch {
+            mutatorMutex.mutate {
+                animateValueTo(value)
+            }
+        }
+    }
+
+    private suspend fun animateValueTo(value: Float) {
+        val targetValue = value.coerceIn(valueRange)
+        kotlinx.coroutines.coroutineScope {
+            launch { valueAnimation.animateTo(targetValue, valueAnimationSpec) }
+            if (velocity != 0f) {
+                launch { velocityAnimation.animateTo(0f, velocityAnimationSpec) }
             }
         }
     }

@@ -39,6 +39,8 @@ class ConfigRepository(context: Context) {
             InputWriteMode.ACCESSIBILITY
         },
         keepAliveEnabled = preferences.getBoolean(KEY_KEEP_ALIVE, false),
+        rootKeepAliveEnabled = preferences.getBoolean(KEY_KEEP_ALIVE, false) &&
+            preferences.getBoolean(KEY_ROOT_KEEP_ALIVE, false),
         themeMode = ThemeMode.fromStored(preferences.getString(KEY_THEME_MODE, null)),
         useMonet = preferences.getBoolean(KEY_USE_MONET, false),
         blurEnabled = preferences.getBoolean(KEY_BLUR_ENABLED, false),
@@ -46,8 +48,8 @@ class ConfigRepository(context: Context) {
         liquidGlassEnabled = preferences.getBoolean(KEY_LIQUID_GLASS, false),
     )
 
-    fun save(config: AppConfig) {
-        preferences.edit {
+    fun save(config: AppConfig, synchronous: Boolean = false) {
+        preferences.edit(commit = synchronous) {
             putBoolean(KEY_ENABLED, config.enabled)
             putString(KEY_PROCESSING_MODE, config.processingMode.storedValue)
             putBoolean(KEY_ENABLE_SUFFIX, config.enableSentenceSuffix)
@@ -62,6 +64,7 @@ class ConfigRepository(context: Context) {
             putString(KEY_INPUT_WRITE_MODE, config.inputWriteMode.storedValue)
             remove(KEY_PRIVILEGED_INPUT_FALLBACK)
             putBoolean(KEY_KEEP_ALIVE, config.keepAliveEnabled)
+            putBoolean(KEY_ROOT_KEEP_ALIVE, config.rootKeepAliveEnabled)
             putString(KEY_THEME_MODE, config.themeMode.storedValue)
             putBoolean(KEY_USE_MONET, config.useMonet)
             putBoolean(KEY_BLUR_ENABLED, config.blurEnabled)
@@ -100,6 +103,7 @@ class ConfigRepository(context: Context) {
         // Migrates the unreleased boolean fallback setting to the explicit mode selector.
         private const val KEY_PRIVILEGED_INPUT_FALLBACK = "privileged_input_fallback"
         private const val KEY_KEEP_ALIVE = "keep_alive"
+        private const val KEY_ROOT_KEEP_ALIVE = "root_keep_alive"
         private const val KEY_THEME_MODE = "theme_mode"
         private const val KEY_USE_MONET = "use_monet"
         private const val KEY_BLUR_ENABLED = "blur_enabled"

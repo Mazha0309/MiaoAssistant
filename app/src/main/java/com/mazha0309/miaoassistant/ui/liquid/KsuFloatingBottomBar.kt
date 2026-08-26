@@ -1,6 +1,7 @@
 // Ported from tiann/KernelSU and the KernelSU contributors (GPL-3.0).
 // Adapted from compose-miuix-ui contributors' IosLiquidGlassNavigationBar (Apache-2.0),
 // which credits Kyant0/AndroidLiquidGlass (Apache-2.0).
+// Synced with KernelSU commit 4521784328352c54334beb29e05c74360b60d7cb.
 
 package com.mazha0309.miaoassistant.ui.liquid
 
@@ -53,8 +54,8 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastCoerceIn
 import androidx.compose.ui.util.fastRoundToInt
+import androidx.compose.ui.util.lerp
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.blur.Backdrop
 import top.yukonga.miuix.kmp.blur.blur
@@ -220,8 +221,7 @@ fun FloatingBottomBar(
             valueRange = 0f..(tabsCount - 1).toFloat(),
             visibilityThreshold = 0.001f,
             initialScale = 1f,
-            // Keep the lens response without enlarging the selected pill on long press.
-            pressedScale = 1f,
+            pressedScale = 78f / 56f,
             canDrag = { offset ->
                 val anim = holder.instance ?: return@DampedDragAnimation true
                 if (tabWidthPx == 0f) return@DampedDragAnimation false
@@ -240,9 +240,8 @@ fun FloatingBottomBar(
             onDragStopped = {
                 val targetIndex = targetValue.fastRoundToInt().fastCoerceIn(0, tabsCount - 1)
                 currentIndex = targetIndex
-                // The pointer handler releases this gesture. Starting another press/release
-                // animation here caused the pill to pop once after a drag.
-                updateValue(targetIndex.toFloat())
+                settleToValue(targetIndex.toFloat())
+                if (selectedIndex() != targetIndex) onSelected(targetIndex)
                 animationScope.launch {
                     offsetAnimation.animateTo(0f, spring(1f, 300f, 0.5f))
                 }
@@ -262,12 +261,11 @@ fun FloatingBottomBar(
     }
 
     LaunchedEffect(selectedIndex) {
-        snapshotFlow { selectedIndex() }.collectLatest { currentIndex = it }
-    }
-    LaunchedEffect(dampedDragAnimation) {
-        snapshotFlow { currentIndex }.drop(1).collectLatest { index ->
-            dampedDragAnimation.animateToValue(index.toFloat())
-            onSelected(index)
+        snapshotFlow { selectedIndex() }.collectLatest { index ->
+            if (currentIndex != index) {
+                currentIndex = index
+                dampedDragAnimation.animateToValue(index.toFloat())
+            }
         }
     }
 
@@ -328,6 +326,16 @@ fun FloatingBottomBar(
                                 )
                             },
                             highlight = { baseHighlight.copy(alpha = 0.75f) },
+                            layerBlock = {
+                                val width = size.width.coerceAtLeast(1f)
+                                val scale = lerp(
+                                    1f,
+                                    1f + 16.dp.toPx() / width,
+                                    dampedDragAnimation.pressProgress,
+                                )
+                                scaleX = scale
+                                scaleY = scale
+                            },
                             onDrawSurface = { drawRect(containerColor) },
                         )
                     } else {
@@ -346,7 +354,9 @@ fun FloatingBottomBar(
 
         if (isBlurEnabled) {
             CompositionLocalProvider(
-                LocalFloatingBottomBarTabScale provides { 1f },
+                LocalFloatingBottomBarTabScale provides {
+                    lerp(1f, 1.2f, dampedDragAnimation.pressProgress)
+                },
                 LocalContentColor provides accentColor,
             ) {
                 Row(

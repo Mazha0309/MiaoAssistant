@@ -7,6 +7,11 @@ import org.junit.Test
 
 class AppConfigTest {
     @Test
+    fun rootKeepAliveIsOptIn() {
+        assertFalse(AppConfig().rootKeepAliveEnabled)
+    }
+
+    @Test
     fun defaultsIncludeRequestedReplacementRules() {
         assertEquals(
             listOf(

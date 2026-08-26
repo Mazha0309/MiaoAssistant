@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.sp
 import com.mazha0309.miaoassistant.BuildConfig
 import com.mazha0309.miaoassistant.R
 import com.mazha0309.miaoassistant.config.AppConfig
+import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.preference.ArrowPreference
@@ -52,6 +53,22 @@ internal fun AboutPage(
                     color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                     fontSize = 14.sp,
                     lineHeight = 21.sp,
+                )
+            }
+
+            Spacer(Modifier.height(12.dp))
+            Card(modifier = Modifier.fillMaxWidth()) {
+                BasicComponent(
+                    title = stringResource(R.string.upstream_project),
+                    summary = stringResource(R.string.upstream_project_credit),
+                )
+                BasicComponent(
+                    title = stringResource(R.string.current_maintainer),
+                    summary = stringResource(R.string.current_maintainer_credit),
+                )
+                BasicComponent(
+                    title = stringResource(R.string.development_collaboration),
+                    summary = stringResource(R.string.development_collaboration_credit),
                 )
             }
 

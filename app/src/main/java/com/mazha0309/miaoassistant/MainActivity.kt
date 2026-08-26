@@ -20,12 +20,16 @@ import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import com.mazha0309.miaoassistant.apps.InstalledApp
 import com.mazha0309.miaoassistant.apps.InstalledAppsRepository
 import com.mazha0309.miaoassistant.config.AppConfig
 import com.mazha0309.miaoassistant.config.ConfigRepository
 import com.mazha0309.miaoassistant.config.InputWriteMode
+import com.mazha0309.miaoassistant.keepalive.BackgroundSettingsNavigator
 import com.mazha0309.miaoassistant.keepalive.KeepAliveService
+import com.mazha0309.miaoassistant.keepalive.RootKeepAliveController
 import com.mazha0309.miaoassistant.privileged.RootPermission
 import com.mazha0309.miaoassistant.service.GlobalInputAccessibilityService
 import com.mazha0309.miaoassistant.ui.MiaoAssistantApp
@@ -40,6 +44,8 @@ class MainActivity : ComponentActivity() {
     private var config by mutableStateOf(AppConfig())
     private var serviceEnabled by mutableStateOf(false)
     private var batteryOptimizationIgnored by mutableStateOf(false)
+    private var keepAliveRunning by mutableStateOf(false)
+    private var rootKeepAliveBusy by mutableStateOf(false)
     private var installedApps by mutableStateOf<List<InstalledApp>?>(null)
     private var pendingInputWriteMode: InputWriteMode? = null
     private val shizukuPermissionListener = Shizuku.OnRequestPermissionResultListener { requestCode, grantResult ->
@@ -75,6 +81,11 @@ class MainActivity : ComponentActivity() {
                 InstalledAppsRepository.load(this@MainActivity)
             }
         }
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                KeepAliveService.running.collect { running -> keepAliveRunning = running }
+            }
+        }
 
         setContent {
             MiaoAssistantTheme(
@@ -86,11 +97,17 @@ class MainActivity : ComponentActivity() {
                     installedApps = installedApps,
                     serviceEnabled = serviceEnabled,
                     batteryOptimizationIgnored = batteryOptimizationIgnored,
+                    keepAliveRunning = keepAliveRunning,
+                    rootKeepAliveBusy = rootKeepAliveBusy,
                     onConfigChange = ::saveConfig,
                     onInputWriteModeChange = ::setInputWriteMode,
                     onKeepAliveChange = ::setKeepAlive,
+                    onRootKeepAliveChange = ::setRootKeepAlive,
                     onOpenAccessibilitySettings = ::openAccessibilitySettings,
                     onOpenBatterySettings = ::openBatteryOptimizationSettings,
+                    onOpenAutoStartSettings = ::openAutoStartSettings,
+                    onOpenPowerPolicySettings = ::openPowerPolicySettings,
+                    onOpenApplicationDetails = ::openApplicationDetails,
                     onInvalidRules = { count ->
                         Toast.makeText(
                             this,
@@ -117,21 +134,39 @@ class MainActivity : ComponentActivity() {
             ?: false
         if (config.keepAliveEnabled) {
             if (!hasNotificationPermission()) {
-                saveConfig(config.copy(keepAliveEnabled = false))
+                val rootWasEnabled = config.rootKeepAliveEnabled
+                saveConfig(
+                    config.copy(
+                        keepAliveEnabled = false,
+                        rootKeepAliveEnabled = false,
+                    ),
+                )
                 KeepAliveService.stop(this)
+                if (rootWasEnabled) {
+                    lifecycleScope.launch(Dispatchers.IO) { RootKeepAliveController.disable() }
+                }
             } else {
                 try {
                     KeepAliveService.start(this)
                 } catch (_: RuntimeException) {
-                    saveConfig(config.copy(keepAliveEnabled = false))
+                    val rootWasEnabled = config.rootKeepAliveEnabled
+                    saveConfig(
+                        config.copy(
+                            keepAliveEnabled = false,
+                            rootKeepAliveEnabled = false,
+                        ),
+                    )
+                    if (rootWasEnabled) {
+                        lifecycleScope.launch(Dispatchers.IO) { RootKeepAliveController.disable() }
+                    }
                 }
             }
         }
     }
 
-    private fun saveConfig(updated: AppConfig) {
+    private fun saveConfig(updated: AppConfig, synchronous: Boolean = false) {
         config = updated
-        configRepository.save(updated)
+        configRepository.save(updated, synchronous)
     }
 
     private fun setInputWriteMode(mode: InputWriteMode) {
@@ -182,8 +217,7 @@ class MainActivity : ComponentActivity() {
 
     private fun setKeepAlive(enabled: Boolean) {
         if (!enabled) {
-            saveConfig(config.copy(keepAliveEnabled = false))
-            KeepAliveService.stop(this)
+            disableKeepAlive()
             return
         }
 
@@ -195,12 +229,83 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun enableKeepAlive() {
+        val previous = config
+        saveConfig(config.copy(keepAliveEnabled = true))
         try {
             KeepAliveService.start(this)
-            saveConfig(config.copy(keepAliveEnabled = true))
         } catch (_: RuntimeException) {
-            saveConfig(config.copy(keepAliveEnabled = false))
+            saveConfig(previous)
             Toast.makeText(this, R.string.keep_alive_start_failed, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun disableKeepAlive() {
+        if (rootKeepAliveBusy) return
+        val rootWasEnabled = config.rootKeepAliveEnabled
+        saveConfig(
+            config.copy(
+                keepAliveEnabled = false,
+                rootKeepAliveEnabled = false,
+            ),
+        )
+        KeepAliveService.stop(this)
+        if (!rootWasEnabled) return
+
+        rootKeepAliveBusy = true
+        lifecycleScope.launch {
+            val removed = withContext(Dispatchers.IO) { RootKeepAliveController.disable() }
+            rootKeepAliveBusy = false
+            if (!removed) {
+                Toast.makeText(
+                    this@MainActivity,
+                    R.string.root_keep_alive_remove_failed,
+                    Toast.LENGTH_SHORT,
+                ).show()
+            }
+        }
+    }
+
+    private fun setRootKeepAlive(enabled: Boolean) {
+        if (rootKeepAliveBusy || (enabled && !config.keepAliveEnabled)) return
+
+        if (!enabled) {
+            saveConfig(config.copy(rootKeepAliveEnabled = false))
+            rootKeepAliveBusy = true
+            lifecycleScope.launch {
+                val removed = withContext(Dispatchers.IO) { RootKeepAliveController.disable() }
+                rootKeepAliveBusy = false
+                Toast.makeText(
+                    this@MainActivity,
+                    if (removed) {
+                        R.string.root_keep_alive_disabled
+                    } else {
+                        R.string.root_keep_alive_remove_failed
+                    },
+                    Toast.LENGTH_SHORT,
+                ).show()
+            }
+            return
+        }
+
+        // The watchdog runs outside the app process and reads the preferences XML directly.
+        // Commit this flag before starting it so it cannot observe a stale disabled value.
+        saveConfig(config.copy(rootKeepAliveEnabled = true), synchronous = true)
+        rootKeepAliveBusy = true
+        lifecycleScope.launch {
+            val installed = withContext(Dispatchers.IO) {
+                RootKeepAliveController.enable(applicationContext)
+            }
+            rootKeepAliveBusy = false
+            if (!installed) saveConfig(config.copy(rootKeepAliveEnabled = false))
+            Toast.makeText(
+                this@MainActivity,
+                if (installed) {
+                    R.string.root_keep_alive_enabled
+                } else {
+                    R.string.root_keep_alive_enable_failed
+                },
+                Toast.LENGTH_SHORT,
+            ).show()
         }
     }
 
@@ -221,6 +326,24 @@ class MainActivity : ComponentActivity() {
             startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
         } catch (_: ActivityNotFoundException) {
             Toast.makeText(this, R.string.battery_settings_unavailable, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun openAutoStartSettings() {
+        if (!BackgroundSettingsNavigator.openAutoStart(this)) {
+            Toast.makeText(this, R.string.background_settings_unavailable, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun openPowerPolicySettings() {
+        if (!BackgroundSettingsNavigator.openPowerPolicy(this)) {
+            Toast.makeText(this, R.string.background_settings_unavailable, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun openApplicationDetails() {
+        if (!BackgroundSettingsNavigator.openApplicationDetails(this)) {
+            Toast.makeText(this, R.string.background_settings_unavailable, Toast.LENGTH_SHORT).show()
         }
     }
 

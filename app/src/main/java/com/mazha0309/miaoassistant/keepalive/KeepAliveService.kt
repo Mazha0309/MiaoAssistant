@@ -18,15 +18,24 @@ import androidx.core.content.ContextCompat
 import com.mazha0309.miaoassistant.MainActivity
 import com.mazha0309.miaoassistant.R
 import com.mazha0309.miaoassistant.config.ConfigRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 class KeepAliveService : Service() {
     override fun onCreate() {
         super.onCreate()
+        mutableRunning.value = true
         createNotificationChannel()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACTION_STOP) {
+            disableAndStop()
+            return START_NOT_STICKY
+        }
+
+        if (!ConfigRepository(this).load().keepAliveEnabled) {
             disableAndStop()
             return START_NOT_STICKY
         }
@@ -57,6 +66,11 @@ class KeepAliveService : Service() {
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
+
+    override fun onDestroy() {
+        mutableRunning.value = false
+        super.onDestroy()
+    }
 
     private fun buildNotification(): Notification {
         val openAppIntent = Intent(this, MainActivity::class.java).apply {
@@ -120,7 +134,19 @@ class KeepAliveService : Service() {
 
     private fun disableAndStop() {
         val repository = ConfigRepository(this)
-        repository.save(repository.load().copy(keepAliveEnabled = false))
+        val config = repository.load()
+        repository.save(
+            config.copy(
+                keepAliveEnabled = false,
+                rootKeepAliveEnabled = false,
+            ),
+        )
+        if (config.rootKeepAliveEnabled) {
+            Thread(
+                { RootKeepAliveController.disable() },
+                "miao-root-keepalive-stop",
+            ).start()
+        }
         stopForegroundCompat()
         stopSelf()
     }
@@ -131,6 +157,9 @@ class KeepAliveService : Service() {
         private const val NOTIFICATION_ID = 0x4D49414F
         private const val ACTION_START = "com.mazha0309.miaoassistant.action.START_KEEP_ALIVE"
         private const val ACTION_STOP = "com.mazha0309.miaoassistant.action.STOP_KEEP_ALIVE"
+
+        private val mutableRunning = MutableStateFlow(false)
+        val running: StateFlow<Boolean> = mutableRunning.asStateFlow()
 
         fun start(context: Context) {
             ContextCompat.startForegroundService(

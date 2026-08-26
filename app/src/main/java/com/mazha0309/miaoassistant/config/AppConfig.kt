@@ -86,6 +86,7 @@ data class AppConfig(
     val scopedPackages: Set<String> = emptySet(),
     val inputWriteMode: InputWriteMode = InputWriteMode.ACCESSIBILITY,
     val keepAliveEnabled: Boolean = false,
+    val rootKeepAliveEnabled: Boolean = false,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val useMonet: Boolean = false,
     val blurEnabled: Boolean = false,

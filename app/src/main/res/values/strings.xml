@@ -73,8 +73,8 @@
 
     <string name="keep_alive">常驻通知保活</string>
     <string name="keep_alive_summary">用可见的低优先级通知提高进程优先级，并在开机后恢复</string>
-    <string name="keep_alive_limit_title">保活说明</string>
-    <string name="keep_alive_limit">无障碍服务的生命周期仍由 Android 系统管理；常驻服务只能降低被 OEM 后台策略终止的概率，不是绝对保证。</string>
+    <string name="keep_alive_running">前台保活服务正在运行</string>
+    <string name="keep_alive_waiting">已开启，但当前未检测到前台服务</string>
     <string name="battery_optimization">电池优化</string>
     <string name="battery_optimization_ignored">已允许后台运行</string>
     <string name="battery_optimization_active">仍可能被系统限制，点击前往设置</string>
@@ -86,6 +86,31 @@
     <string name="keep_alive_notification_title">喵喵输入助手正在运行</string>
     <string name="keep_alive_notification_text">全局文本改写保活已开启</string>
     <string name="keep_alive_notification_stop">关闭保活</string>
+    <string name="background_run_settings">HyperOS 后台设置</string>
+    <string name="background_run_settings_summary">配置自启动、后台耗电策略与最近任务锁定</string>
+    <string name="background_run_dialog_title">允许后台运行</string>
+    <string name="background_run_dialog_summary">完成以下设置，降低后台清理概率</string>
+    <string name="autostart_settings">自启动管理</string>
+    <string name="autostart_settings_summary">允许应用在系统启动后恢复服务</string>
+    <string name="power_policy_settings">后台耗电策略</string>
+    <string name="power_policy_settings_summary">进入后选择“不限制”或“无限制”</string>
+    <string name="application_details">应用详情</string>
+    <string name="application_details_summary">检查通知与后台相关权限</string>
+    <string name="recent_task_lock">锁定最近任务</string>
+    <string name="recent_task_lock_hint">长按应用卡片，再点击锁形图标</string>
+    <string name="background_settings_unavailable">无法打开对应的系统设置</string>
+    <string name="root_keep_alive">Root 强保活</string>
+    <string name="root_keep_alive_summary">由独立 Root 守护在系统清理后恢复前台服务与无障碍</string>
+    <string name="root_keep_alive_requires_normal">请先开启常驻通知保活</string>
+    <string name="root_keep_alive_working">正在配置 Root 守护…</string>
+    <string name="root_keep_alive_confirm_title">开启 Root 强保活？</string>
+    <string name="root_keep_alive_confirm_summary">此功能会在 /data/adb/service.d 安装可移除的守护脚本，每 30 秒检查一次。系统清理或重启后，它会重新启动前台服务并恢复无障碍；若你要手动关闭无障碍，请先关闭此选项。</string>
+    <string name="root_keep_alive_enabled">Root 强保活已开启</string>
+    <string name="root_keep_alive_disabled">Root 强保活已关闭并移除</string>
+    <string name="root_keep_alive_enable_failed">Root 守护安装失败，已回滚</string>
+    <string name="root_keep_alive_remove_failed">Root 守护未能立即移除，配置已关闭，守护会自行退出</string>
+    <string name="enable">开启</string>
+    <string name="done">完成</string>
 
     <string name="section_preview">实时预览</string>
     <string name="preview_input">输入一段文本</string>
@@ -112,6 +137,12 @@
     <string name="blur_unsupported_summary">需要 Android 13 或更高版本</string>
     <string name="about">关于</string>
     <string name="about_description">面向普通非密码输入框的本地文本改写工具。输入内容不联网、不落盘。</string>
+    <string name="upstream_project">原项目作者</string>
+    <string name="upstream_project_credit">QiCaiJie114514 · QQMiaoAssistant</string>
+    <string name="current_maintainer">维护与重构</string>
+    <string name="current_maintainer_credit">Mazha0309</string>
+    <string name="development_collaboration">开发协作</string>
+    <string name="development_collaboration_credit">GPT5.6Sol</string>
     <string name="third_party_licenses">第三方使用许可</string>
     <string name="third_party_licenses_summary">查看开源组件、来源与许可证</string>
     <string name="project_license">本项目许可证</string>
