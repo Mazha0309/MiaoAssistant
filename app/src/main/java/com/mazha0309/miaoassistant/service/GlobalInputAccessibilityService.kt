@@ -140,6 +140,7 @@ class GlobalInputAccessibilityService : AccessibilityService() {
         var text = event.text.lastOrNull()?.toString()
         var selectionStart = -1
         var selectionEnd = -1
+        var sourceShowsHintText = false
         val source = event.source
         if (source != null) {
             try {
@@ -147,6 +148,7 @@ class GlobalInputAccessibilityService : AccessibilityService() {
                 source.text?.toString()?.let { text = it }
                 selectionStart = source.textSelectionStart
                 selectionEnd = source.textSelectionEnd
+                sourceShowsHintText = isShowingHintText(source)
                 if (packageName != null && isEditable(source)) {
                     cacheFocusedNode(source, packageName)
                 }
@@ -157,6 +159,13 @@ class GlobalInputAccessibilityService : AccessibilityService() {
 
         val targetPackage = packageName ?: return
         if (!isPackageAllowed(targetPackage)) return
+        if (sourceShowsHintText) {
+            // Some Tencent editors expose their placeholder through node.text when the real
+            // input is empty. Rewriting that value turns the hint into undeletable draft text.
+            Log.d(TAG, "Ignoring hint-only text event for $targetPackage")
+            cancelPendingChange()
+            return
+        }
         lastInputPackage = targetPackage
         lastInputEventAt = SystemClock.uptimeMillis()
         if (selectionStart < 0) {
@@ -204,6 +213,11 @@ class GlobalInputAccessibilityService : AccessibilityService() {
 
         try {
             if (change.isPassword || (source != null && !isEligibleTextField(source))) return
+            if (source != null && isShowingHintText(source)) {
+                Log.d(TAG, "Ignoring refreshed hint-only text for ${change.packageName}")
+                cancelPendingChange()
+                return
+            }
 
             val nodeText = source?.text?.toString()
             val inputSnapshot = if (
@@ -427,6 +441,9 @@ class GlobalInputAccessibilityService : AccessibilityService() {
         node.isEditable ||
             node.actionList.any { it.id == AccessibilityNodeInfo.ACTION_SET_TEXT } ||
             node.className?.toString().orEmpty().contains("EditText", ignoreCase = true)
+
+    private fun isShowingHintText(node: AccessibilityNodeInfo): Boolean =
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && node.isShowingHintText
 
     private fun hasPasswordInputType(inputType: Int): Boolean {
         val inputClass = inputType and InputType.TYPE_MASK_CLASS
